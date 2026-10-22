@@ -20,7 +20,11 @@ concurrency:
 jobs:
   analyze:
     name: Analyze Swift
-    runs-on: xcode-27
+    # CodeQL can't analyse Swift built with Xcode 27 / Swift 6.4 (GitHub
+    # changelog, 2026-10-19), so the scan uses the last supported Xcode on a
+    # macOS 26 runner. It reads the same source; releases still use Xcode 27.
+    # Move this back to xcode-27 once CodeQL supports it.
+    runs-on: macos-26
     timeout-minutes: 45
     permissions:
       contents: read
@@ -30,8 +34,8 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Select pinned Xcode
-        run: scripts/select-xcode.sh
+      - name: Select Xcode supported by CodeQL
+        run: scripts/select-xcode.sh 26.6
 
       # Pull requests that don't touch anything CodeQL analyses skip the scan
       # (the check still reports success). Main and the weekly run always scan.
