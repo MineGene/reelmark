@@ -1,0 +1,35 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Please don't attach media files, screenshots of your library, or your TMDB token.**
+        Security problems: report privately via the Security tab instead.
+  - type: input
+    id: version
+    attributes:
+      label: Reelmark version
+      description: Reelmark › About Reelmark
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and Mac
+      placeholder: macOS 27.0, MacBook Neo
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Example file name (if it's a matching problem)
+      description: A made-up name in the same style is fine.
+      placeholder: Show.Name.S01E02.1080p.WEB.H264-GROUP.mkv
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true

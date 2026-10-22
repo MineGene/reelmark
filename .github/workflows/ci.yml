@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly, to catch breakage from runner, macOS or Xcode updates.
+    - cron: "41 2 * * 1"
+  workflow_dispatch:
+
+# Read-only token; no secrets are used anywhere in CI, so fork PRs are safe.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  commit-privacy:
+    name: Commit privacy
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check commit emails and trailers
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: scripts/check-commits.sh "$BASE" "$HEAD"
+
+  core-tests:
+    name: Core tests (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [xcode-27]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Toolchain
+        run: xcodebuild -version && swift --version
+      - name: Run tests
+        run: |
+          set +e
+          swift test --package-path Packages/ReelmarkCore 2>&1 | tee test.log
+          status=${PIPESTATUS[0]}
+          scripts/annotate-errors.sh test.log
+          exit "$status"
+
+  build-app:
+    name: Build and check app
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Select pinned Xcode
+        run: scripts/select-xcode.sh
+      - name: Build app
+        run: scripts/build-app.sh
+      - name: Check structure, signature and entitlements
+        run: scripts/check-app.sh build/Release/Reelmark.app
+      - name: Lint (advisory)
+        continue-on-error: true
+        run: xcrun swift-format lint --strict --recursive Reelmark Packages/ReelmarkCore
+
+  reproducible:
+    name: Reproducible build
+    runs-on: xcode-27
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select pinned Xcode
+        run: scripts/select-xcode.sh
+      - name: Build twice at different paths and compare
+        run: scripts/check-reproducible.sh

@@ -1,0 +1,199 @@
+import ReelmarkCore
+import SwiftUI
+
+/// The main window: drop files in, check the matches, press File.
+/// Standard SwiftUI controls only, so the window follows macOS's own design
+/// (materials, toolbar, light and dark, accessibility) without custom styling.
+struct ContentView: View {
+    @Environment(LibraryModel.self) private var model
+    @State private var selection = Set<LibraryModel.Item.ID>()
+    @State private var searchingFor: LibraryModel.Item.ID?
+    @State private var searchTitle = ""
+
+    var body: some View {
+        @Bindable var model = model
+        Group {
+            if model.items.isEmpty {
+                EmptyState()
+            } else {
+                ItemTable(selection: $selection) { id in
+                    searchTitle = model.items.first(where: { $0.id == id })?.parsed.title ?? ""
+                    searchingFor = id
+                }
+            }
+        }
+        .toolbar { toolbar }
+        .dropDestination(for: URL.self) { urls, _ in
+            model.add(urls)
+            return true
+        }
+        .fileImporter(
+            isPresented: $model.isImporting, allowedContentTypes: [.folder, .item],
+            allowsMultipleSelection: true
+        ) { result in
+            if case .success(let urls) = result { model.add(urls) }
+        }
+        .alert(
+            "Search The Movie Database",
+            isPresented: Binding(get: { searchingFor != nil }, set: { if !$0 { searchingFor = nil } })
+        ) {
+            TextField("Title", text: $searchTitle)
+            Button("Search") {
+                if let id = searchingFor { model.search(searchTitle, for: id) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Type the movie or show's name as it's usually written.")
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbar: some ToolbarContent {
+        ToolbarItemGroup(placement: .navigation) {
+            Button("Add Files", systemImage: "plus") { model.isImporting = true }
+                .help("Add movies, episodes or whole download folders")
+        }
+        ToolbarItemGroup(placement: .primaryAction) {
+            if model.items.contains(where: { $0.status == .done }) {
+                Button("Clear Filed", systemImage: "checkmark.circle") { model.clearDone() }
+                    .help("Remove filed items from the list")
+            }
+            Button {
+                Task { await model.renameReady() }
+            } label: {
+                if model.isRenaming {
+                    ProgressView().controlSize(.small)
+                } else {
+                    Text(model.readyCount > 0 ? "File \(model.readyCount)" : "File")
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(model.readyCount == 0 || model.isRenaming)
+            .help(model.mode == .copy ? "Copy matched files into your library" : "Move matched files into your library")
+        }
+    }
+}
+
+// MARK: - Empty window
+
+private struct EmptyState: View {
+    @Environment(LibraryModel.self) private var model
+
+    var body: some View {
+        ContentUnavailableView {
+            Label("Drop Movies and TV Episodes", systemImage: "film.stack")
+        } description: {
+            Text("Reelmark finds each title on The Movie Database and files it the way Jellyfin expects.")
+        } actions: {
+            if model.token == nil {
+                SettingsLink { Text("Add Your TMDB Token…") }
+                    .buttonStyle(.borderedProminent)
+            }
+            Button("Add Files…") { model.isImporting = true }
+        }
+    }
+}
+
+// MARK: - The list
+
+private struct ItemTable: View {
+    // Not `private`: a private property would make the generated
+    // initializer private too, and ContentView couldn't create this view.
+    @Environment(LibraryModel.self) var model
+    @Binding var selection: Set<LibraryModel.Item.ID>
+    let onSearch: (LibraryModel.Item.ID) -> Void
+
+    var body: some View {
+        Table(model.items, selection: $selection) {
+            TableColumn("Downloaded File") { item in
+                Text(item.source.lastPathComponent)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .help(item.source.lastPathComponent)
+            }
+            TableColumn("Match") { item in
+                MatchCell(item: item)
+            }
+            TableColumn("New Name") { item in
+                Text(item.newPath ?? "—")
+                    .lineLimit(1)
+                    .truncationMode(.head)
+                    .foregroundStyle(item.newPath == nil ? Color.secondary : Color.primary)
+                    .help(item.newPath ?? "")
+            }
+            TableColumn("") { item in
+                StatusIcon(status: item.status)
+            }
+            .width(24)
+        }
+        .contextMenu(forSelectionType: LibraryModel.Item.ID.self) { ids in
+            if ids.count == 1, let id = ids.first {
+                Button("Search Again…") { onSearch(id) }
+            }
+            Button("Remove from List", role: .destructive) { model.remove(ids) }
+        }
+        .onDeleteCommand { model.remove(selection) }
+    }
+}
+
+private struct MatchCell: View {
+    @Environment(LibraryModel.self) var model
+    let item: LibraryModel.Item
+
+    var body: some View {
+        switch item.status {
+        case .pending:
+            Text(model.token == nil ? "Needs a TMDB token (Settings)" : "Waiting…")
+                .foregroundStyle(.secondary)
+        case .searching:
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.small)
+                Text("Searching…").foregroundStyle(.secondary)
+            }
+        case .noMatch:
+            Text("No match — right-click to search again")
+                .foregroundStyle(.secondary)
+        case .failed(let message):
+            Text(message)
+                .foregroundStyle(.secondary)
+                .help(message)
+        case .ready, .done:
+            if item.candidates.count > 1 && item.status == .ready {
+                Picker(
+                    "Match",
+                    selection: Binding(
+                        get: { item.matchID ?? 0 },
+                        set: { model.choose($0, for: item.id) })
+                ) {
+                    ForEach(item.candidates) { match in
+                        Text(match.displayName).tag(match.id)
+                    }
+                }
+                .labelsHidden()
+                .help(item.match?.overview ?? "")
+            } else {
+                Text(item.match?.displayName ?? "—")
+                    .help(item.match?.overview ?? "")
+            }
+        }
+    }
+}
+
+private struct StatusIcon: View {
+    let status: LibraryModel.Item.Status
+
+    var body: some View {
+        switch status {
+        case .done:
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+                .accessibilityLabel("Filed")
+        case .failed, .noMatch:
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.yellow)
+                .accessibilityLabel("Needs attention")
+        default:
+            EmptyView()
+        }
+    }
+}
