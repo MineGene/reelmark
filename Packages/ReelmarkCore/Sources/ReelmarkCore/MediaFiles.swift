@@ -25,8 +25,11 @@ public enum MediaFiles {
                 found.append(url)
             }
         }
-        // Episodes in order, however the folders listed them.
-        return found.sorted { $0.path.localizedStandardCompare($1.path) == .orderedAscending }
+        // Episodes in order, however the folders listed them. Paths are
+        // resolved first: macOS can report one folder by two paths
+        // (/var/… and /private/var/…), which would scramble the order.
+        let keyed = found.map { ($0, $0.resolvingSymlinksInPath().path) }
+        return keyed.sorted { $0.1.localizedStandardCompare($1.1) == .orderedAscending }.map(\.0)
     }
 
     static func isVideo(_ url: URL) -> Bool {
