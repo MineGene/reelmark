@@ -42,8 +42,11 @@ final class ReelmarkMemoryTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-ui-testing-items", "10000"]
         app.launch()
-        let first = app.staticTexts["Made.Up.Show.S01E01.1080p.WEB.mkv"]
-        XCTAssertTrue(first.waitForExistence(timeout: 30))
+        let first = app.staticTexts["Made.Up.Show.S01E01.mkv"]
+        guard first.waitForExistence(timeout: 30) else {
+            print(app.debugDescription)
+            return XCTFail("The made-up list didn't appear")
+        }
         XCTAssertTrue(app.staticTexts["10,000 items"].waitForExistence(timeout: 10))
 
         let header = app.buttons["Downloaded File"].firstMatch
