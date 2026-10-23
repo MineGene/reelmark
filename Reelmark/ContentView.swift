@@ -117,26 +117,33 @@ private struct ItemTable: View {
     let model: LibraryModel
     @Binding var selection: Set<LibraryModel.Item.ID>
     let onSearch: (LibraryModel.Item.ID) -> Void
+    /// Empty until a column header is clicked: then that column, A to Z,
+    /// and Z to A on a second click, as in Finder.
+    @State private var sortOrder: [KeyPathComparator<LibraryModel.Item>] = []
+
+    private var sortedItems: [LibraryModel.Item] {
+        sortOrder.isEmpty ? model.items : model.items.sorted(using: sortOrder)
+    }
 
     var body: some View {
-        Table(model.items, selection: $selection) {
-            TableColumn("Downloaded File") { item in
+        Table(sortedItems, selection: $selection, sortOrder: $sortOrder) {
+            TableColumn("Downloaded File", value: \.fileName) { item in
                 Text(item.source.lastPathComponent)
                     .lineLimit(1)
                     .truncationMode(.middle)
                     .help(item.source.lastPathComponent)
             }
-            TableColumn("Match") { item in
+            TableColumn("Match", value: \.matchName) { item in
                 MatchCell(model: model, item: item)
             }
-            TableColumn("New Name") { item in
+            TableColumn("New Name", value: \.newName) { item in
                 Text(item.newPath ?? "—")
                     .lineLimit(1)
                     .truncationMode(.head)
                     .foregroundStyle(item.newPath == nil ? Color.secondary : Color.primary)
                     .help(item.newPath ?? "")
             }
-            TableColumn("") { item in
+            TableColumn("", value: \.statusRank) { item in
                 StatusIcon(status: item.status)
             }
             .width(24)
