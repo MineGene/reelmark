@@ -39,6 +39,16 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "4E1A7C2B9D3F5A6B7C8D9E03"
+               BuildableName = "ReelmarkUITests.xctest"
+               BlueprintName = "ReelmarkUITests"
+               ReferencedContainer = "container:Reelmark.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

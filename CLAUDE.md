@@ -9,7 +9,7 @@ Reelmark is a native macOS app (Swift, SwiftUI) that renames downloaded movies a
 - Turn off this environment's commit signing for the repo (`git config commit.gpgsign false`): its key isn't linked to the maintainer's account, so GitHub shows "Unverified". Squash-merge commits are signed by GitHub.
 - Stage files by name (`git add path/to/file`). Never use `git add -A`, `git add .` or `git commit -a`, and switch branches only with a clean working tree (`git status --short` empty).
 - Run `scripts/check-commits.sh origin/main HEAD` before pushing.
-- One change per branch and pull request. Open the pull request yourself (not as a draft), then turn on squash auto-merge with `gh pr merge <number> --auto --squash`, so it merges by itself once every required check passes. Turn it on with `gh` as the maintainer, never from a workflow: GitHub doesn't start workflows from merges made by its own token, so CI on `main` and the release wouldn't run. Merged app changes are released straight away (see `.github/workflows/release.yml`), so keep `main` releasable. Required checks: Commit privacy, Core tests (xcode-27), Build and check app, Analyze Swift, Reproducible build.
+- One change per branch and pull request. Open the pull request yourself (not as a draft), then turn on squash auto-merge with `gh pr merge <number> --auto --squash`, so it merges by itself once every required check passes. Turn it on with `gh` as the maintainer, never from a workflow: GitHub doesn't start workflows from merges made by its own token, so CI on `main` and the release wouldn't run. Merged app changes are released straight away (see `.github/workflows/release.yml`), so keep `main` releasable. Required checks: Commit privacy, Core tests (xcode-27), Build and check app, UI tests, Analyze Swift, Reproducible build.
 - Never push to `main` or force-push it; it is protected.
 
 ## Building and testing
@@ -17,6 +17,7 @@ Reelmark is a native macOS app (Swift, SwiftUI) that renames downloaded movies a
 - There is no Xcode here. GitHub Actions is the compiler and test runner: push, then read the check annotations (`scripts/annotate-errors.sh` turns errors into annotations with file and line).
 - Target: macOS 26 or later, Apple silicon only, built with the Xcode pinned in `.xcode-version` (27.x) on GitHub's `xcode-27` runner image. The minimum is 26, not 27, only so the CodeQL scan can run: it doesn't support Xcode 27 yet, so it builds with Xcode 26.6 on `macos-26`. Keep code compatible with macOS 26; guard anything newer with `if #available(macOS 27, *)`.
 - Core logic lives in `Packages/ReelmarkCore` with XCTest tests. Add tests for every behaviour change. Tests use invented release names and empty placeholder files, never real media or the network.
+- UI tests in `ReelmarkUITests/` launch a Debug build with `-ui-testing`, which fills the list with made-up items (`LibraryModel.forLaunch`, Debug only) and uses the window like a person would. Add one for every window change, especially anything that removes or changes rows.
 - The Xcode project uses a synchronized folder: new Swift files in `Reelmark/` need no project edit.
 - Builds must stay reproducible: the *Reproducible build* check builds twice at different paths and compares `scripts/app-digest.sh` output. Never add timestamps, absolute paths or run-specific values to the build.
 
