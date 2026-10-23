@@ -153,6 +153,7 @@ final class ReelmarkUITests: XCTestCase {
         let headerCentre = header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         headerCentre.click()  // A to Z: Another.Copied… comes before Ready…
         XCTAssertTrue(eventually { another.frame.minY < ready.frame.minY }, "Not sorted A to Z")
+        Thread.sleep(forTimeInterval: 1)  // so two clicks aren't read as a double-click
         headerCentre.click()  // Z to A
         XCTAssertTrue(eventually { ready.frame.minY < another.frame.minY }, "Not sorted Z to A")
         assertStillRunning(app)
