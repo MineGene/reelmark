@@ -47,6 +47,18 @@ final class ReelmarkUITests: XCTestCase {
         }
     }
 
+    /// True once `condition` holds, checking for up to 5 seconds: the list
+    /// redraws a moment after a click, not instantly.
+    @MainActor
+    private func eventually(_ condition: () -> Bool) -> Bool {
+        let deadline = Date.now.addingTimeInterval(5)
+        while Date.now < deadline {
+            if condition() { return true }
+            RunLoop.current.run(until: .now.addingTimeInterval(0.2))
+        }
+        return condition()
+    }
+
     @MainActor
     private func assertStillRunning(_ app: XCUIApplication) {
         XCTAssertEqual(app.state, .runningForeground, "Reelmark quit unexpectedly")
@@ -140,9 +152,9 @@ final class ReelmarkUITests: XCTestCase {
         // tests even when visible, so click the middle of the header itself.
         let headerCentre = header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         headerCentre.click()  // A to Z: Another.Copied… comes before Ready…
-        XCTAssertLessThan(another.frame.minY, ready.frame.minY)
+        XCTAssertTrue(eventually { another.frame.minY < ready.frame.minY }, "Not sorted A to Z")
         headerCentre.click()  // Z to A
-        XCTAssertLessThan(ready.frame.minY, another.frame.minY)
+        XCTAssertTrue(eventually { ready.frame.minY < another.frame.minY }, "Not sorted Z to A")
         assertStillRunning(app)
     }
 }
