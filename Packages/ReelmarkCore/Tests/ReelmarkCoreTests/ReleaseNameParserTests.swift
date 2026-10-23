@@ -5,8 +5,9 @@ import XCTest
 /// Real-world-style release names (invented, not taken from anyone's files).
 final class ReleaseNameParserTests: XCTestCase {
 
-    private func parse(_ name: String, folder: String? = nil) -> ParsedName {
-        ReleaseNameParser.parse(fileName: name, parentFolder: folder, currentYear: 2026)
+    private func parse(_ name: String, folder: String? = nil, above: String? = nil) -> ParsedName {
+        ReleaseNameParser.parse(
+            fileName: name, parentFolder: folder, grandparentFolder: above, currentYear: 2026)
     }
 
     // MARK: Episodes
@@ -73,6 +74,31 @@ final class ReleaseNameParserTests: XCTestCase {
         XCTAssertEqual(
             parse("S02E01.mkv", folder: "Andor.S02.2025.2160p"),
             ParsedName(title: "Andor", kind: .episode(season: 2, episodes: [1])))
+    }
+
+    func testShowNameFromFolderAboveASeasonFolder() {
+        // Severance/Season 2/S02E03.mkv
+        XCTAssertEqual(
+            parse("S02E03.mkv", folder: "Season 2", above: "Severance"),
+            ParsedName(title: "Severance", kind: .episode(season: 2, episodes: [3])))
+        // Severance (2022)/Season 02/S02E03.mkv keeps the show's year too.
+        XCTAssertEqual(
+            parse("S02E03.mkv", folder: "Season 02", above: "Severance (2022)"),
+            ParsedName(title: "Severance", year: 2022, kind: .episode(season: 2, episodes: [3])))
+    }
+
+    func testSeasonFromFolderWhenNameHasOnlyAnEpisodeNumber() {
+        let expected = ParsedName(title: "Severance", kind: .episode(season: 2, episodes: [3]))
+        XCTAssertEqual(parse("Episode 03.mkv", folder: "Season 2", above: "Severance"), expected)
+        XCTAssertEqual(parse("Ep 3.mkv", folder: "Season 02", above: "Severance"), expected)
+        XCTAssertEqual(parse("E03.mkv", folder: "Severance S02"), expected)
+        XCTAssertEqual(parse("03 - The Outie Sees.mkv", folder: "Season 2", above: "Severance"), expected)
+        XCTAssertEqual(parse("Severance E03.mkv", folder: "Season 2"), expected)
+    }
+
+    func testBareNumberOutsideASeasonFolderIsNotAnEpisode() {
+        XCTAssertFalse(parse("03 - Something.mkv", folder: "Downloads").isEpisode)
+        XCTAssertFalse(parse("Episode 03.mkv").isEpisode)
     }
 
     // MARK: Movies

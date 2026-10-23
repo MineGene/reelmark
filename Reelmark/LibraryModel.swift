@@ -81,9 +81,11 @@ final class LibraryModel {
         }
         let known = Set(items.map(\.source))
         for file in MediaFiles.videos(in: urls) where !known.contains(file) {
+            let folder = file.deletingLastPathComponent()
             let parsed = ReleaseNameParser.parse(
                 fileName: file.lastPathComponent,
-                parentFolder: file.deletingLastPathComponent().lastPathComponent)
+                parentFolder: folder.lastPathComponent,
+                grandparentFolder: folder.deletingLastPathComponent().lastPathComponent)
             items.append(Item(source: file, parsed: parsed))
         }
         lookUpPending()
