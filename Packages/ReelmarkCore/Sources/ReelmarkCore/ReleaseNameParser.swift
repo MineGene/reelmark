@@ -40,22 +40,35 @@ public enum ReleaseNameParser {
     ///   - fileName: the file's name, with or without extension.
     ///   - parentFolder: the name of the folder the file sits in. Used when
     ///     the file name has no title of its own (for example `S01E02.mkv`
-    ///     inside `Severance Season 1`).
+    ///     inside `Severance Season 1`), and for the season number when the
+    ///     file name only has an episode number (`Episode 03.mkv` inside
+    ///     `Season 2`).
+    ///   - grandparentFolder: the folder above that. Used for the title when
+    ///     the parent is only a season folder (`Severance/Season 2/S02E03.mkv`).
     ///   - currentYear: years later than next year are treated as part of
     ///     the title, not as a release year (`Blade Runner 2049`).
     public static func parse(
         fileName: String,
         parentFolder: String? = nil,
+        grandparentFolder: String? = nil,
         currentYear: Int = Calendar.current.component(.year, from: .now)
     ) -> ParsedName {
         let text = clean((fileName as NSString).deletingPathExtension)
         var result =
-            parseEpisode(text, currentYear: currentYear) ?? parseMovie(text, currentYear: currentYear)
+            parseEpisode(text, currentYear: currentYear)
+            ?? parseEpisodeInSeasonFolder(text, folder: parentFolder, currentYear: currentYear)
+            ?? parseMovie(text, currentYear: currentYear)
 
-        if result.title.isEmpty, let parentFolder {
-            let folder = parseMovie(cutSeasonMarker(clean(parentFolder)), currentYear: currentYear)
-            result.title = folder.title
-            result.year = result.year ?? folder.year
+        // No title in the file name: take it from the folder the file is in,
+        // or from the one above when that's only a season folder.
+        if result.title.isEmpty {
+            for folder in [parentFolder, grandparentFolder].compactMap({ $0 }) {
+                let named = parseMovie(cutSeasonMarker(clean(folder)), currentYear: currentYear)
+                guard !named.title.isEmpty else { continue }
+                result.title = named.title
+                result.year = result.year ?? named.year
+                break
+            }
         }
         return result
     }
@@ -99,6 +112,31 @@ public enum ReleaseNameParser {
 
         let (title, year) = splitTrailingYear(trimTitle(String(text[..<titleEnd])), currentYear: currentYear)
         return ParsedName(title: title, year: year, kind: .episode(season: season, episodes: episodes))
+    }
+
+    /// An episode whose file name has only an episode number, in a folder
+    /// that names the season: `Episode 03`, `Ep 3`, `E03` or `03 - Title`
+    /// inside `Season 2`, `Season 02` or `Show S02`. Without such a folder a
+    /// bare number could be anything, so it's left to the movie rules.
+    static func parseEpisodeInSeasonFolder(_ text: String, folder: String?, currentYear: Int) -> ParsedName? {
+        guard let folder,
+            let marker = clean(folder).firstMatch(of: /\b(?:Season ?(\d{1,2})|S(\d{1,2}))\b/.ignoresCase()),
+            let season = Int(marker.output.1 ?? marker.output.2 ?? "")
+        else { return nil }
+
+        if let match = text.firstMatch(of: /\bE(?:p(?:isode)?)? ?(\d{1,3})\b/.ignoresCase()),
+            let episode = Int(match.output.1)
+        {
+            let (title, year) = splitTrailingYear(
+                trimTitle(String(text[..<match.range.lowerBound])), currentYear: currentYear)
+            return ParsedName(title: title, year: year, kind: .episode(season: season, episodes: [episode]))
+        }
+        // A leading number is the episode; what follows is its own title,
+        // not the show's, so the show's name comes from the folders.
+        if let match = text.firstMatch(of: /^(\d{1,3})\b/), let episode = Int(match.output.1) {
+            return ParsedName(title: "", kind: .episode(season: season, episodes: [episode]))
+        }
+        return nil
     }
 
     /// `Movie Name 2019 1080p…` → title before the last plausible year.

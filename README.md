@@ -18,7 +18,7 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 ## Features
 
 - **Drag and drop:** single files or whole download folders. Sample clips and hidden files are skipped.
-- **Movies and TV:** handles episodes, seasons and multi-episode files (`S01E01-E02`).
+- **Movies and TV:** handles episodes, seasons and multi-episode files (`S01E01-E02`), including season folders like `Show/Season 2/Episode 03.mkv`.
 - **You stay in control:** check every match before anything happens, choose a different match from a list, or search again by hand.
 - **Copy or move:** Copy is the default, so your torrent client can keep seeding. On the same drive, a copy takes no extra space.
 - **Safe:** never overwrites and never deletes anything.
