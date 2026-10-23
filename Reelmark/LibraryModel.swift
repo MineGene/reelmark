@@ -401,10 +401,10 @@ final class LibraryModel {
                     parsed: ParsedName(title: title, year: 2020, kind: .movie),
                     candidates: found, matchID: found.first?.id, status: status)
             }
-            let arguments = CommandLine.arguments
-            if let flag = arguments.firstIndex(of: "-ui-testing-items"), flag + 1 < arguments.count,
-                let count = Int(arguments[flag + 1])
-            {
+            // The count comes from the environment, not the command line:
+            // macOS treats a bare value like "300" after an app's arguments as
+            // a file to open, and then the app's window never appeared.
+            if let count = ProcessInfo.processInfo.environment["REELMARK_UI_TEST_ITEMS"].flatMap(Int.init) {
                 // Added just after launch, once the window exists, as a real
                 // drop would be. A long list present before the window is
                 // created kept the window from appearing in UI tests.
@@ -423,7 +423,7 @@ final class LibraryModel {
             reindex()
         }
 
-        /// For the memory test ("-ui-testing-items 300"): a long season pack
+        /// For the memory test (REELMARK_UI_TEST_ITEMS=300): a long season pack
         /// where every row offers three possible matches, the heaviest kind
         /// of row the list draws.
         private static func uiTestEpisode(_ number: Int) -> Item {
