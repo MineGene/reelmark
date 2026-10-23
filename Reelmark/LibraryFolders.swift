@@ -28,7 +28,8 @@ enum LibraryFolders {
 
     /// `url` must come from an open panel, which grants the access.
     static func remember(_ url: URL, for kind: Match.Kind) throws {
-        let data = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
+        let data = try url.bookmarkData(
+            options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
         UserDefaults.standard.set(data, forKey: key(kind))
     }
 

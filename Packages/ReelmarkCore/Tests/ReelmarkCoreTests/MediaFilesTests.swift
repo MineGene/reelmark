@@ -18,7 +18,8 @@ final class MediaFilesTests: XCTestCase {
     @discardableResult
     private func make(_ path: String, contents: String = "") throws -> URL {
         let url = root.appending(path: path)
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Data(contents.utf8).write(to: url)
         return url
     }

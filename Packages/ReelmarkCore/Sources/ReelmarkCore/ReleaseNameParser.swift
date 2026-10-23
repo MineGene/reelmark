@@ -49,7 +49,8 @@ public enum ReleaseNameParser {
         currentYear: Int = Calendar.current.component(.year, from: .now)
     ) -> ParsedName {
         let text = clean((fileName as NSString).deletingPathExtension)
-        var result = parseEpisode(text, currentYear: currentYear) ?? parseMovie(text, currentYear: currentYear)
+        var result =
+            parseEpisode(text, currentYear: currentYear) ?? parseMovie(text, currentYear: currentYear)
 
         if result.title.isEmpty, let parentFolder {
             let folder = parseMovie(cutSeasonMarker(clean(parentFolder)), currentYear: currentYear)
