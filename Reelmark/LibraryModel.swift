@@ -312,7 +312,10 @@ final class LibraryModel {
             if let flag = arguments.firstIndex(of: "-ui-testing-items"), flag + 1 < arguments.count,
                 let count = Int(arguments[flag + 1])
             {
-                items = (1...max(count, 1)).map(Self.uiTestEpisode)
+                // Added just after launch, once the window exists, as a real
+                // drop would be. A long list present before the window is
+                // created kept the window from appearing in UI tests.
+                Task { items = (1...max(count, 1)).map(Self.uiTestEpisode) }
                 return
             }
             items = [
