@@ -15,7 +15,7 @@ The *Commit privacy* check enforces the email and trailer rules on every pull re
 
 1. Branch from `main`; one change per pull request.
 2. Push and open a pull request. CI builds the app, runs the tests, checks permissions, web addresses and commit privacy, and runs CodeQL. Nothing needs a Mac except trying the app.
-3. The maintainer's pull requests (including Claude's) are squash-merged automatically once every required check passes: the *Auto-merge* workflow turns it on when they're opened. Pull requests from forks and Dependabot are merged by hand. The maintainer can still review, hold (turn off auto-merge) or close any pull request.
+3. The maintainer's pull requests (including Claude's) are squash-merged automatically once every required check passes: auto-merge is turned on as each one is opened. Pull requests from forks and Dependabot are merged by hand. The maintainer can still review, hold (turn off auto-merge) or close any pull request.
 
 `main` is protected: no direct pushes, force pushes or deletions.
 
@@ -35,6 +35,6 @@ See the "Rules the design depends on" section of `CLAUDE.md`: what may be sent a
 
 ## Releases
 
-Releases are automatic. Every night the *Release* workflow checks `main`; if the app has changed since the last release, it tests, builds and publishes the next patch version (0.1.1, 0.1.2, …) as a DMG with its checksum and build attestation, then verifies the download and rebuilds it from source on a fresh machine. Changes to docs, tests or CI alone don't make a release.
+Releases are automatic. As soon as a change to the app is merged into `main`, the *Release* workflow tests, builds and publishes the next patch version (0.1.1, 0.1.2, …) as a DMG with its checksum and build attestation, then verifies the download and rebuilds it from source on a fresh machine. Changes to docs, tests or CI alone don't make a release. A nightly run also checks `main`, in case a merge didn't start one.
 
 For a bigger version number (for example `0.2.0`) or to release straight away: **Actions › Release › Run workflow**, keep the branch on `main`, and optionally enter the version.
