@@ -27,7 +27,7 @@ You'll need a free TMDB access token: create an account at [themoviedb.org](http
 - The only thing Reelmark sends anywhere is a title and year — for example "Severance" — to TMDB's API, with your token. File names, folders and everything else stay on your Mac.
 - No analytics, no crash reporting, no update checks, nothing written about your files.
 - Sandboxed: Reelmark can only touch files you drop in and the two library folders you choose.
-- Every release is checked automatically: exact permissions, TMDB as the only web address in the app, and a reproducible build anyone can verify with `scripts/verify-release.sh`.
+- Every release is checked automatically: exact permissions, TMDB as the only web address in the app, and a reproducible build anyone can verify with `scripts/verify-release.sh` (everything matches exactly except the pixels of the app icon's pre-rendered pictures).
 
 ## How it's made
 
