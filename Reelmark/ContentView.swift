@@ -58,10 +58,12 @@ struct ContentView: View {
                 .help("Add movies, episodes or download folders. You can also drag them into this window.")
         }
         ToolbarItemGroup(placement: .primaryAction) {
-            if model.items.contains(where: { $0.status == .done }) {
-                // A plain "Clear", as in Safari's Downloads list.
-                Button("Clear") { model.clearDone() }
-                    .help("Remove items that are already in your library from this list")
+            if !model.items.isEmpty {
+                // Empties the list (never touches any files). Not while
+                // copying, which still needs the items' file access.
+                Button("Clear") { model.clear() }
+                    .disabled(model.isRenaming)
+                    .help("Remove everything from this list. Your files aren't changed.")
             }
             Button {
                 Task { await model.renameReady() }

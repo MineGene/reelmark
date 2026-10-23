@@ -105,10 +105,6 @@ final class LibraryModel {
         accessGranted = []
     }
 
-    func clearDone() {
-        remove(Set(items.filter { $0.status == .done }.map(\.id)))
-    }
-
     // MARK: - Matching
 
     func choose(_ matchID: Int, for id: Item.ID) {
