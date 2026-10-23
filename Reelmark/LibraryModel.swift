@@ -273,3 +273,42 @@ final class LibraryModel {
         }
     }
 }
+
+#if DEBUG
+    // MARK: - UI tests
+
+    extension LibraryModel {
+        /// The model the app starts with. Debug builds launched with
+        /// "-ui-testing" (by the UI tests in ReelmarkUITests) start with
+        /// made-up items instead of an empty list. Release builds don't
+        /// contain this code at all.
+        static func forLaunch() -> LibraryModel {
+            let model = LibraryModel()
+            if CommandLine.arguments.contains("-ui-testing") { model.loadUITestItems() }
+            return model
+        }
+
+        /// One item ready to copy, two already in the library and one with no
+        /// match. The files don't exist and nothing is looked up online.
+        private func loadUITestItems() {
+            func item(_ id: Int, _ name: String, _ title: String, _ status: Item.Status) -> Item {
+                let match = Match(id: id, kind: .movie, title: title, year: 2020)
+                let found = status == .noMatch ? [] : [match]
+                return Item(
+                    source: URL(filePath: "/ReelmarkUITests/\(name)"),
+                    parsed: ParsedName(title: title, year: 2020, kind: .movie),
+                    candidates: found, matchID: found.first?.id, status: status)
+            }
+            items = [
+                item(1, "Ready.Movie.2020.mkv", "Ready Movie", .ready),
+                item(2, "Copied.Movie.2020.mkv", "Copied Movie", .done),
+                item(3, "Another.Copied.Movie.2020.mkv", "Another Copied Movie", .done),
+                item(4, "Unknown.Thing.2020.mkv", "Unknown Thing", .noMatch),
+            ]
+        }
+    }
+#else
+    extension LibraryModel {
+        static func forLaunch() -> LibraryModel { LibraryModel() }
+    }
+#endif

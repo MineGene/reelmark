@@ -74,6 +74,30 @@ jobs:
         continue-on-error: true
         run: xcrun swift-format lint --strict --recursive Reelmark Packages/ReelmarkCore
 
+  ui-tests:
+    name: UI tests
+    # Launches a Debug build of the app and uses its window like a person
+    # would (see ReelmarkUITests), so a crash fails here, not on a Mac.
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Select pinned Xcode
+        run: scripts/select-xcode.sh
+      - name: Run UI tests
+        run: |
+          set +e
+          xcodebuild test \
+            -project Reelmark.xcodeproj -scheme Reelmark \
+            -destination 'platform=macOS,arch=arm64' \
+            -derivedDataPath build/UITests \
+            2>&1 | tee ui-tests.log
+          status=${PIPESTATUS[0]}
+          scripts/annotate-errors.sh ui-tests.log
+          exit "$status"
+
   reproducible:
     name: Reproducible build
     runs-on: xcode-27
