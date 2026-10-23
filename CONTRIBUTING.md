@@ -15,7 +15,7 @@ The *Commit privacy* check enforces the email and trailer rules on every pull re
 
 1. Branch from `main`; one change per pull request.
 2. Push and open a pull request. CI builds the app, runs the tests, checks permissions, web addresses and commit privacy, and runs CodeQL. Nothing needs a Mac except trying the app.
-3. Pull requests are squash-merged automatically once every required check passes (auto-merge). The maintainer can still review, hold or close any pull request.
+3. The maintainer's pull requests (including Claude's) are squash-merged automatically once every required check passes: the *Auto-merge* workflow turns it on when they're opened. Pull requests from forks and Dependabot are merged by hand. The maintainer can still review, hold (turn off auto-merge) or close any pull request.
 4. **Sensitive files need the maintainer's review.** Changes to permissions (`Config/`), workflows and scripts (`.github/`, `scripts/`), the Xcode project, the network code (`TMDBClient.swift`), Keychain use (`Keychain.swift`), the pinned Xcode version or `CLAUDE.md` wait until the maintainer adds the `maintainer-reviewed` label. A new push removes the label, so the reviewed version is the one that merges.
 
 `main` is protected: no direct pushes, force pushes or deletions.
@@ -36,4 +36,6 @@ See the "Rules the design depends on" section of `CLAUDE.md`: what may be sent a
 
 ## Releases
 
-In the Actions tab, open **Release › Run workflow**, keep the branch on `main`, and enter the new version (for example `0.2.0`). The run waits for the maintainer's approval, then builds `main`, creates the tag and publishes the DMG with its checksum and build attestation. *Verify release* then re-checks the published download and rebuilds it from source.
+Releases are automatic. Every night the *Release* workflow checks `main`; if the app has changed since the last release, it tests, builds and publishes the next patch version (0.1.1, 0.1.2, …) as a DMG with its checksum and build attestation, then verifies the download and rebuilds it from source on a fresh machine. Changes to docs, tests or CI alone don't make a release.
+
+For a bigger version number (for example `0.2.0`) or to release straight away: **Actions › Release › Run workflow**, keep the branch on `main`, and optionally enter the version.
