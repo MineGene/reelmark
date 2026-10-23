@@ -13,7 +13,7 @@ import ReelmarkCore
 @Observable
 final class LibraryModel {
 
-    struct Item: Identifiable {
+    struct Item: Identifiable, Equatable {
         enum Status: Equatable {
             case pending  // not looked up yet
             case searching
@@ -55,6 +55,8 @@ final class LibraryModel {
 
     private(set) var items: [Item] = []
     private(set) var isRenaming = false
+    /// True while dropped folders are still being searched for videos.
+    private(set) var isScanning = false
     var isImporting = false
 
     /// The person's own TMDB token, if they've added one in Settings.
@@ -84,6 +86,15 @@ final class LibraryModel {
     @ObservationIgnored private var accessGranted: [URL] = []
     @ObservationIgnored private var lookup: Task<Void, Never>?
 
+    // Big drops (tens of thousands of files) stay quick: items are found by
+    // ID through an index rather than by searching the list, and lookups
+    // take the next waiting item from a queue.
+    @ObservationIgnored private var positions: [Item.ID: Int] = [:]
+    @ObservationIgnored private var waiting: [Item.ID] = []
+    @ObservationIgnored private var nextWaiting = 0
+    /// Folder searches still running; several drops can overlap.
+    @ObservationIgnored private var scans: [UUID: Task<[Item], Never>] = [:]
+
     // MARK: - Adding and removing
 
     func add(_ urls: [URL]) {
@@ -92,42 +103,103 @@ final class LibraryModel {
             // have access and simply return false.
             if url.startAccessingSecurityScopedResource() { accessGranted.append(url) }
         }
+        // Searching folders and reading names happens off the main thread,
+        // so dropping thousands of files doesn't freeze the window.
         let known = Set(items.map(\.source))
+        let key = UUID()
+        let scan = Task.detached(priority: .userInitiated) { Self.newItems(in: urls, skipping: known) }
+        scans[key] = scan
+        isScanning = true
+        Task {
+            let found = await scan.value
+            scans[key] = nil
+            isScanning = !scans.isEmpty
+            guard !scan.isCancelled else { return }
+            // Another drop may have added some of the same files meanwhile.
+            let present = Set(items.map(\.source))
+            let fresh = found.filter { !present.contains($0.source) }
+            items.append(contentsOf: fresh)
+            reindex()
+            waiting.append(contentsOf: fresh.map(\.id))
+            lookUpPending()
+        }
+    }
+
+    /// Stops searching dropped folders; nothing found so far is added.
+    func stopScanning() {
+        for scan in scans.values { scan.cancel() }
+    }
+
+    /// The videos in what was dropped, with their names read. Runs off the
+    /// main thread and stops early if cancelled.
+    nonisolated private static func newItems(in urls: [URL], skipping known: Set<URL>) -> [Item] {
+        var found: [Item] = []
         for file in MediaFiles.videos(in: urls) where !known.contains(file) {
+            if Task.isCancelled { return [] }
             let folder = file.deletingLastPathComponent()
             let parsed = ReleaseNameParser.parse(
                 fileName: file.lastPathComponent,
                 parentFolder: folder.lastPathComponent,
                 grandparentFolder: folder.deletingLastPathComponent().lastPathComponent)
-            items.append(Item(source: file, parsed: parsed))
+            found.append(Item(source: file, parsed: parsed))
         }
-        lookUpPending()
+        return found
     }
 
     func remove(_ ids: Set<Item.ID>) {
         items.removeAll { ids.contains($0.id) }
+        reindex()
         if items.isEmpty { clear() }
     }
 
     func clear() {
         lookup?.cancel()
         lookup = nil
+        stopScanning()
         items = []
+        reindex()
+        waiting = []
+        nextWaiting = 0
         cache = [:]
         for url in accessGranted { url.stopAccessingSecurityScopedResource() }
         accessGranted = []
     }
 
+    /// Rebuilds the ID index after items are added or removed. (Changing an
+    /// item in place doesn't move it, so needs no reindex.)
+    private func reindex() {
+        positions = Dictionary(uniqueKeysWithValues: items.indices.map { (items[$0].id, $0) })
+    }
+
+    private func index(of id: Item.ID) -> Int? {
+        guard let index = positions[id], items.indices.contains(index), items[index].id == id else {
+            return nil
+        }
+        return index
+    }
+
+    /// The next item waiting to be looked up, in the order they were added.
+    private func nextToLookUp() -> Int? {
+        while nextWaiting < waiting.count {
+            let id = waiting[nextWaiting]
+            nextWaiting += 1
+            if let index = index(of: id), items[index].status == .pending { return index }
+        }
+        waiting = []
+        nextWaiting = 0
+        return nil
+    }
+
     // MARK: - Matching
 
     func choose(_ matchID: Int, for id: Item.ID) {
-        guard let index = items.firstIndex(where: { $0.id == id }) else { return }
+        guard let index = index(of: id) else { return }
         items[index].matchID = matchID
     }
 
     /// Searches again with a title the user typed.
     func search(_ title: String, for id: Item.ID) {
-        guard let index = items.firstIndex(where: { $0.id == id }) else { return }
+        guard let index = index(of: id) else { return }
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         items[index].parsed.title = trimmed
@@ -135,6 +207,7 @@ final class LibraryModel {
         items[index].candidates = []
         items[index].matchID = nil
         items[index].status = .pending
+        waiting.append(id)
         lookUpPending()
     }
 
@@ -145,7 +218,8 @@ final class LibraryModel {
             // A cancelled lookup was already replaced; leave the new one be.
             defer { if !Task.isCancelled { lookup = nil } }
             let client = TMDBClient(token: token)
-            while !Task.isCancelled, let index = items.firstIndex(where: { $0.status == .pending }) {
+            var answeredFromCache = 0
+            while !Task.isCancelled, let index = nextToLookUp() {
                 let id = items[index].id
                 let parsed = items[index].parsed
                 items[index].status = .searching
@@ -156,8 +230,12 @@ final class LibraryModel {
                 do {
                     if let cached = cache[key] {
                         matches = cached
+                        // A long season pack is answered from the cache
+                        // without waiting; let the window update now and then.
+                        answeredFromCache += 1
+                        if answeredFromCache.isMultiple(of: 200) { await Task.yield() }
                     } else {
-                        matches = try await client.search(parsed)
+                        matches = try await Self.search(client, parsed)
                         cache[key] = matches
                     }
                     status = matches.isEmpty ? .noMatch : .ready
@@ -166,7 +244,7 @@ final class LibraryModel {
                 }
 
                 // The item may have been removed while we waited.
-                guard let current = items.firstIndex(where: { $0.id == id }) else { continue }
+                guard let current = self.index(of: id) else { continue }
                 // Stopped (token changed): leave it waiting rather than failed.
                 if Task.isCancelled {
                     items[current].status = .pending
@@ -182,6 +260,20 @@ final class LibraryModel {
         }
     }
 
+    /// TMDB answers "busy" (429) when asked too often in a short time. Wait
+    /// 2, 4 and then 8 seconds and try again before giving up on the item.
+    private static func search(_ client: TMDBClient, _ parsed: ParsedName) async throws -> [Match] {
+        var wait = 2
+        while true {
+            do {
+                return try await client.search(parsed)
+            } catch TMDBClient.Failure.http(429) where wait <= 8 {
+                try await Task.sleep(for: .seconds(wait))
+                wait *= 2
+            }
+        }
+    }
+
     // MARK: - Filing
 
     /// Moves or copies every matched file into its library folder.
@@ -192,7 +284,7 @@ final class LibraryModel {
         let mode = self.mode
 
         for id in items.filter({ $0.status == .ready }).map(\.id) {
-            guard let index = items.firstIndex(where: { $0.id == id }),
+            guard let index = index(of: id),
                 let match = items[index].match, let path = items[index].newPath
             else { continue }
 
@@ -216,7 +308,7 @@ final class LibraryModel {
             }.value
             if hasAccess { library.stopAccessingSecurityScopedResource() }
 
-            if let current = items.firstIndex(where: { $0.id == id }) {
+            if let current = self.index(of: id) {
                 items[current].status = failure.map { Item.Status.failed($0) } ?? .done
             }
         }
@@ -248,6 +340,7 @@ final class LibraryModel {
         for index in items.indices
         where items[index].status == .searching || Self.isAuthError(items[index].status) {
             items[index].status = .pending
+            waiting.append(items[index].id)
         }
         lookUpPending()
     }
@@ -308,12 +401,40 @@ final class LibraryModel {
                     parsed: ParsedName(title: title, year: 2020, kind: .movie),
                     candidates: found, matchID: found.first?.id, status: status)
             }
+            // The count comes from the environment, not the command line:
+            // macOS treats a bare value like "300" after an app's arguments as
+            // a file to open, and then the app's window never appeared.
+            if let count = ProcessInfo.processInfo.environment["REELMARK_UI_TEST_ITEMS"].flatMap(Int.init) {
+                // Added just after launch, as a real drop would be.
+                Task {
+                    items = (1...max(count, 1)).map(Self.uiTestEpisode)
+                    reindex()
+                }
+                return
+            }
             items = [
                 item(1, "Ready.Movie.2020.mkv", "Ready Movie", .ready),
                 item(2, "Copied.Movie.2020.mkv", "Copied Movie", .done),
                 item(3, "Another.Copied.Movie.2020.mkv", "Another Copied Movie", .done),
                 item(4, "Unknown.Thing.2020.mkv", "Unknown Thing", .noMatch),
             ]
+            reindex()
+        }
+
+        /// For the large-list UI test (REELMARK_UI_TEST_ITEMS): a long season pack
+        /// where every row offers three possible matches, the heaviest kind
+        /// of row the list draws.
+        private static func uiTestEpisode(_ number: Int) -> Item {
+            let shows = (0..<3).map {
+                Match(id: number * 10 + $0, kind: .show, title: "Made Up Show \($0 + 1)", year: 2020 + $0)
+            }
+            let episode = String(format: "S%02dE%02d", number / 100 + 1, number % 100)
+            return Item(
+                source: URL(filePath: "/ReelmarkUITests/Made.Up.Show.\(episode).mkv"),
+                parsed: ParsedName(
+                    title: "Made Up Show",
+                    kind: .episode(season: number / 100 + 1, episodes: [number % 100])),
+                candidates: shows, matchID: shows[0].id, status: .ready)
         }
     }
 #else
