@@ -1,15 +1,28 @@
 name: Release
 
-# Releases happen by themselves: every night (about 2:40 am in Queensland)
-# this checks main, and if the app has changed since the last release it
-# builds, tests and publishes the next patch version (0.1.0, 0.1.1, …), then
-# a fresh machine downloads and rebuilds it to verify it. Changes to docs,
-# tests or CI alone don't make a release.
+# Releases happen by themselves: as soon as a change to the app is merged
+# into main, this builds, tests and publishes the next patch version
+# (0.1.0, 0.1.1, …), then a fresh machine downloads and rebuilds it to
+# verify it. Changes to docs, tests or CI alone don't make a release.
 #
-# For a bigger version number, or to release straight away: Actions tab ›
-# Release › Run workflow (works from a phone), optionally with a version
-# like 0.2.0.
+# Merges only start this when a person merged or turned on auto-merge:
+# GitHub never starts workflows from its own token's actions. So a nightly
+# run (about 2:40 am in Queensland) also checks main and catches anything
+# that slipped through.
+#
+# For a bigger version number: Actions tab › Release › Run workflow (works
+# from a phone), optionally with a version like 0.2.0.
 on:
+  push:
+    branches: [main]
+    # The same files scripts/next-version.sh counts as the app.
+    paths:
+      - "Reelmark/**"
+      - "Packages/ReelmarkCore/Sources/**"
+      - "Packages/ReelmarkCore/Package.swift"
+      - "Config/**"
+      - "Reelmark.xcodeproj/**"
+      - ".xcode-version"
   schedule:
     - cron: "37 16 * * *"
   workflow_dispatch:
