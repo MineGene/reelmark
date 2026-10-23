@@ -136,9 +136,12 @@ final class ReelmarkUITests: XCTestCase {
         let ready = item(Self.ready, in: app)
         let another = item("Another.Copied.Movie.2020.mkv", in: app)
 
-        header.click()  // A to Z: Another.Copied… comes before Ready…
+        // Table header buttons report themselves as not hittable to UI
+        // tests even when visible, so click the middle of the header itself.
+        let headerCentre = header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        headerCentre.click()  // A to Z: Another.Copied… comes before Ready…
         XCTAssertLessThan(another.frame.minY, ready.frame.minY)
-        header.click()  // Z to A
+        headerCentre.click()  // Z to A
         XCTAssertLessThan(ready.frame.minY, another.frame.minY)
         assertStillRunning(app)
     }
