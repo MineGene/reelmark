@@ -312,9 +312,7 @@ final class LibraryModel {
             // macOS treats a bare value like "300" after an app's arguments as
             // a file to open, and then the app's window never appeared.
             if let count = ProcessInfo.processInfo.environment["REELMARK_UI_TEST_ITEMS"].flatMap(Int.init) {
-                // Added just after launch, once the window exists, as a real
-                // drop would be. A long list present before the window is
-                // created kept the window from appearing in UI tests.
+                // Added just after launch, as a real drop would be.
                 Task { items = (1...max(count, 1)).map(Self.uiTestEpisode) }
                 return
             }
@@ -326,7 +324,7 @@ final class LibraryModel {
             ]
         }
 
-        /// For the memory test (REELMARK_UI_TEST_ITEMS=300): a long season pack
+        /// For the large-list UI test (REELMARK_UI_TEST_ITEMS): a long season pack
         /// where every row offers three possible matches, the heaviest kind
         /// of row the list draws.
         private static func uiTestEpisode(_ number: Int) -> Item {
