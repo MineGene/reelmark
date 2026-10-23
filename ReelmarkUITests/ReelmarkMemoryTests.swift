@@ -19,7 +19,8 @@ final class ReelmarkMemoryTests: XCTestCase {
         continueAfterFailure = false
         for attempt in 1...3 {
             let app = XCUIApplication()
-            app.launchArguments = ["-ui-testing", "-ui-testing-items", "\(count)"]
+            app.launchArguments = ["-ui-testing"]
+            app.launchEnvironment["REELMARK_UI_TEST_ITEMS"] = "\(count)"
             app.launch()
             if app.windows.firstMatch.waitForExistence(timeout: 15) {
                 print("Reelmark's window appeared on launch attempt \(attempt)")
