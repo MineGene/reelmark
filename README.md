@@ -9,7 +9,7 @@ Shows/Severance (2022) [tmdbid-95396]/Season 01/Severance S01E02.mkv
 
 The TMDB id in each folder name tells Jellyfin precisely which title it is, so remakes, same-named shows and foreign titles are never mixed up.
 
-- Native macOS app for Apple silicon, macOS 27 or later
+- Native macOS app for Apple silicon, macOS 26 or later (built for macOS 27)
 - Free and open source (MIT), no account, no tracking, no ads
 - Drop single files or whole download folders; sample clips are skipped
 - Pick a different match from a list, or search again by hand

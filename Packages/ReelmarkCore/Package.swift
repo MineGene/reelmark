@@ -5,7 +5,7 @@ import PackageDescription
 // tested with `swift test` on CI. Apple frameworks only; no dependencies.
 let package = Package(
     name: "ReelmarkCore",
-    platforms: [.macOS("27.0")],
+    platforms: [.macOS("26.0")],
     products: [
         .library(name: "ReelmarkCore", targets: ["ReelmarkCore"])
     ],

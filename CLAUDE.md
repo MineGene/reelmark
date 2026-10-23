@@ -16,7 +16,7 @@ Reelmark is a native macOS app (Swift, SwiftUI) that renames downloaded movies a
 ## Building and testing
 
 - There is no Xcode here. GitHub Actions is the compiler and test runner: push, then read the check annotations (`scripts/annotate-errors.sh` turns errors into annotations with file and line).
-- Target: macOS 27, Apple silicon only, built with the Xcode pinned in `.xcode-version` on GitHub's `xcode-27` runner image.
+- Target: macOS 26 or later, Apple silicon only, built with the Xcode pinned in `.xcode-version` (27.x) on GitHub's `xcode-27` runner image. The minimum is 26, not 27, only so the CodeQL scan can run: it doesn't support Xcode 27 yet, so it builds with Xcode 26.6 on `macos-26`. Keep code compatible with macOS 26; guard anything newer with `if #available(macOS 27, *)`.
 - Core logic lives in `Packages/ReelmarkCore` with XCTest tests. Add tests for every behaviour change. Tests use invented release names and empty placeholder files, never real media or the network.
 - The Xcode project uses a synchronized folder: new Swift files in `Reelmark/` need no project edit.
 - Builds must stay reproducible: the *Reproducible build* check builds twice at different paths and compares `scripts/app-digest.sh` output. Never add timestamps, absolute paths or run-specific values to the build.

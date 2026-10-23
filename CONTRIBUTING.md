@@ -22,7 +22,7 @@ The *Commit privacy* check enforces the email and trailer rules on every pull re
 
 ## Building locally (optional)
 
-Requires macOS 27, Apple silicon and the Xcode version in `.xcode-version`.
+Requires Apple silicon and the Xcode version in `.xcode-version`.
 
 ```sh
 scripts/build-app.sh                 # builds build/Release/Reelmark.app

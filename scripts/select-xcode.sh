@@ -1,12 +1,14 @@
 #!/bin/bash
 # Selects the exact Xcode version pinned in .xcode-version, so every build
 # (CI, release, and anyone rebuilding to verify a release) uses the same one.
+# An explicit version can be given instead, e.g. `select-xcode.sh 26.6`; only
+# the security scan does this (see .github/workflows/codeql.yml).
 # In GitHub Actions it exports DEVELOPER_DIR for later steps; locally it
 # prints the export line to use.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-version=$(tr -d '[:space:]' < .xcode-version)
+version=${1:-$(tr -d '[:space:]' < .xcode-version)}
 for dir in "/Applications/Xcode_${version}.app" "/Applications/Xcode-${version}.app" "/Applications/Xcode.app"; do
   [ -d "$dir" ] || continue
   actual=$(DEVELOPER_DIR="$dir/Contents/Developer" xcodebuild -version | awk 'NR==1 {print $2}')
@@ -22,5 +24,5 @@ for dir in "/Applications/Xcode_${version}.app" "/Applications/Xcode-${version}.
 done
 
 installed=$(ls -d /Applications/Xcode*.app 2>/dev/null | xargs -n1 basename 2>/dev/null | tr '\n' ' ')
-echo "::error::Xcode $version (pinned in .xcode-version) isn't installed. Found: ${installed:-none}"
+echo "::error::Xcode $version isn't installed. Found: ${installed:-none}"
 exit 1

@@ -72,11 +72,13 @@ public struct TMDBClient: Sendable {
     }
 
     private func get(_ path: String, query: [URLQueryItem]) async throws -> Data {
-        var components = URLComponents(url: Self.base.appending(path: path), resolvingAgainstBaseURL: false)
-        components?.queryItems = query.isEmpty ? nil : query
+        guard var components = URLComponents(url: Self.base.appending(path: path), resolvingAgainstBaseURL: false)
+        else { throw Failure.badResponse }
+        components.queryItems = query.isEmpty ? nil : query
         // URLComponents leaves "+" alone, but servers read it as a space.
-        components?.percentEncodedQuery = components?.percentEncodedQuery?.replacing("+", with: "%2B")
-        guard let url = components?.url else { throw Failure.badResponse }
+        let encoded = components.percentEncodedQuery?.replacing("+", with: "%2B")
+        components.percentEncodedQuery = encoded
+        guard let url = components.url else { throw Failure.badResponse }
 
         var request = URLRequest(url: url)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
