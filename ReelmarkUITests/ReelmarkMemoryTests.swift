@@ -60,10 +60,7 @@ final class ReelmarkMemoryTests: XCTestCase {
     /// deleting it all should each finish promptly.
     @MainActor
     func testTenThousandItemsStayResponsive() throws {
-        continueAfterFailure = false
-        let app = XCUIApplication()
-        app.launchArguments = ["-ui-testing", "-ui-testing-items", "10000"]
-        app.launch()
+        let app = try launch(withItems: 10000)
         let first = app.staticTexts["Made.Up.Show.S01E01.mkv"]
         guard first.waitForExistence(timeout: 30) else {
             print(app.debugDescription)
