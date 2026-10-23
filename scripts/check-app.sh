@@ -23,6 +23,13 @@ extra=$(find "$app/Contents" \( -name "*.framework" -o -name "*.dylib" -o -name 
 [ -z "$extra" ] || fail "Unexpected embedded code: $extra"
 echo "None"
 
+echo "== Icon"
+# The Icon Composer icon (Reelmark/AppIcon.icon) compiles into Assets.car;
+# without it Finder and the Dock show a blank icon.
+icon=$(plutil -extract CFBundleIconName raw "$app/Contents/Info.plist" 2>/dev/null || true)
+[ -n "$icon" ] && [ -f "$app/Contents/Resources/Assets.car" ] || fail "The app has no icon"
+echo "$icon"
+
 echo "== Signature"
 codesign --verify --deep --strict --verbose=2 "$app"
 # Capture first: piping into "grep -q" lets grep exit early, codesign then
