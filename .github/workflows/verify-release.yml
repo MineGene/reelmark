@@ -1,14 +1,10 @@
 name: Verify release
 
-# After every release, a fresh machine runs the same verification users run:
-# checksum, signed build record, app contents, permissions, and a full
-# rebuild from source that must give exactly the same app.
+# Re-checks a published release on a fresh machine: checksum, signed build
+# record, app contents, permissions, and a full rebuild from source that
+# must give exactly the same app. Release runs this automatically after
+# publishing; this workflow is for checking any release again by hand.
 on:
-  # Safe here: it runs only after Release, checks out main (not untrusted
-  # code), has a read-only token and only reads the public release.
-  workflow_run: # zizmor: ignore[dangerous-triggers]
-    workflows: [Release]
-    types: [completed]
   workflow_dispatch:
     inputs:
       version:
@@ -21,7 +17,6 @@ permissions:
 
 jobs:
   verify:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: xcode-27
     timeout-minutes: 45
     steps:

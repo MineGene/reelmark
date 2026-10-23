@@ -1,14 +1,22 @@
 name: Release
 
-# Start from the Actions tab (works from a phone): Release › Run workflow,
-# enter a version like 0.2.0. The job waits for approval on the protected
-# "release" environment, then builds main, tags it and publishes the release.
+# Releases happen by themselves: every night (about 2:40 am in Queensland)
+# this checks main, and if the app has changed since the last release it
+# builds, tests and publishes the next patch version (0.1.0, 0.1.1, …), then
+# a fresh machine downloads and rebuilds it to verify it. Changes to docs,
+# tests or CI alone don't make a release.
+#
+# For a bigger version number, or to release straight away: Actions tab ›
+# Release › Run workflow (works from a phone), optionally with a version
+# like 0.2.0.
 on:
+  schedule:
+    - cron: "37 16 * * *"
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release, e.g. 0.2.0"
-        required: true
+        description: "Version to release, e.g. 0.2.0 (blank = next patch version)"
+        required: false
         type: string
 
 permissions:
@@ -19,7 +27,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  plan:
+    name: Decide version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Only release from main
+        run: |
+          [ "$GITHUB_REF" = "refs/heads/main" ] \
+            || { echo "::error::Run the release from the main branch."; exit 1; }
+      - name: Next version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          version=$(scripts/next-version.sh "$INPUT_VERSION")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Version to release: ${version:-none}"
+
   release:
+    needs: plan
+    if: needs.plan.outputs.version != ''
     runs-on: xcode-27
     timeout-minutes: 45
     environment: release
@@ -35,30 +69,12 @@ jobs:
       - name: Select pinned Xcode
         run: scripts/select-xcode.sh
 
-      - name: Only release from main
-        run: |
-          [ "$GITHUB_REF" = "refs/heads/main" ] \
-            || { echo "::error::Run the release from the main branch."; exit 1; }
-
-      - name: Check version
-        id: version
-        env:
-          INPUT_VERSION: ${{ inputs.version }}
-        run: |
-          version="${INPUT_VERSION#v}"
-          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
-            || { echo "::error::Version must look like 1.2.3"; exit 1; }
-          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
-            echo "::error::v$version has already been released."; exit 1
-          fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-
       - name: Test core
         run: swift test --package-path Packages/ReelmarkCore
 
       - name: Build app
         env:
-          REELMARK_VERSION: ${{ steps.version.outputs.version }}
+          REELMARK_VERSION: ${{ needs.plan.outputs.version }}
         run: scripts/build-app.sh
 
       - name: Check app
@@ -67,7 +83,7 @@ jobs:
       - name: Record app digest
         id: digest
         env:
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ needs.plan.outputs.version }}
         run: |
           file="build/Reelmark-$VERSION-app-digest.txt"
           scripts/app-digest.sh build/Release/Reelmark.app > "$file"
@@ -78,7 +94,7 @@ jobs:
       - name: Make DMG
         id: dmg
         env:
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ needs.plan.outputs.version }}
         run: |
           name="Reelmark-$VERSION.dmg"
           staging=build/dmg
@@ -96,14 +112,14 @@ jobs:
         with:
           # The DMG, and the app digest that binds the app inside it to this build.
           subject-path: |
-            build/Reelmark-${{ steps.version.outputs.version }}.dmg
-            build/Reelmark-${{ steps.version.outputs.version }}-app-digest.txt
+            build/Reelmark-${{ needs.plan.outputs.version }}.dmg
+            build/Reelmark-${{ needs.plan.outputs.version }}-app-digest.txt
 
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           NAME: ${{ steps.dmg.outputs.name }}
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ needs.plan.outputs.version }}
           APP_DIGEST: ${{ steps.digest.outputs.sha }}
           XCODE: ${{ steps.digest.outputs.xcode }}
           MACOS: ${{ steps.digest.outputs.macos }}
@@ -143,3 +159,21 @@ jobs:
             --notes-file build/notes.md \
             --target "$GITHUB_SHA" \
             --generate-notes
+
+  verify:
+    name: Verify release
+    needs: [plan, release]
+    # A fresh machine runs the same checks users can run: checksum, signed
+    # build record, app contents, permissions, and a full rebuild from
+    # source that must give exactly the same app.
+    runs-on: xcode-27
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify, including a rebuild from source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: scripts/verify-release.sh "$VERSION" --rebuild
