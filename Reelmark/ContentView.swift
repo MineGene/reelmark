@@ -69,7 +69,9 @@ struct ContentView: View {
             }
             .buttonStyle(.borderedProminent)
             .disabled(model.readyCount == 0 || model.isRenaming)
-            .help(model.mode == .copy ? "Copy matched files into your library" : "Move matched files into your library")
+            .help(
+                model.mode == .copy
+                    ? "Copy matched files into your library" : "Move matched files into your library")
         }
     }
 }

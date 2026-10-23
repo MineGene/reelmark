@@ -34,7 +34,9 @@ final class LibraryModel {
 
         /// Where the file will go, relative to the library folder.
         var newPath: String? {
-            match.map { JellyfinNaming.relativePath(for: parsed, match: $0, fileExtension: source.pathExtension) }
+            match.map {
+                JellyfinNaming.relativePath(for: parsed, match: $0, fileExtension: source.pathExtension)
+            }
         }
     }
 

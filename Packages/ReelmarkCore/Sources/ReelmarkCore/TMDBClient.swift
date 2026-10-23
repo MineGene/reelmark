@@ -57,7 +57,8 @@ public struct TMDBClient: Sendable {
 
         if let year = parsed.year {
             let yearKey = kind == .movie ? "year" : "first_air_date_year"
-            let withYear = try await search(kind, title: parsed.title, extra: [URLQueryItem(name: yearKey, value: String(year))])
+            let withYear = try await search(
+                kind, title: parsed.title, extra: [URLQueryItem(name: yearKey, value: String(year))])
             if !withYear.isEmpty { return withYear }
         }
         return try await search(kind, title: parsed.title, extra: [])
@@ -67,12 +68,16 @@ public struct TMDBClient: Sendable {
 
     private func search(_ kind: Match.Kind, title: String, extra: [URLQueryItem]) async throws -> [Match] {
         let path = kind == .movie ? "search/movie" : "search/tv"
-        let query = [URLQueryItem(name: "query", value: title), URLQueryItem(name: "include_adult", value: "false")] + extra
+        let query =
+            [URLQueryItem(name: "query", value: title), URLQueryItem(name: "include_adult", value: "false")]
+            + extra
         return try Self.decodeSearch(try await get(path, query: query), kind: kind)
     }
 
     private func get(_ path: String, query: [URLQueryItem]) async throws -> Data {
-        guard var components = URLComponents(url: Self.base.appending(path: path), resolvingAgainstBaseURL: false)
+        guard
+            var components = URLComponents(
+                url: Self.base.appending(path: path), resolvingAgainstBaseURL: false)
         else { throw Failure.badResponse }
         components.queryItems = query.isEmpty ? nil : query
         // URLComponents leaves "+" alone, but servers read it as a space.

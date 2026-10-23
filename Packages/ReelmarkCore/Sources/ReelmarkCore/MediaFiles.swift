@@ -76,7 +76,8 @@ public enum MediaFiles {
         if manager.fileExists(atPath: destination.path) {
             throw TransferError.alreadyExists(destination.lastPathComponent)
         }
-        try manager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try manager.createDirectory(
+            at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
         switch mode {
         case .move: try manager.moveItem(at: source, to: destination)
         case .copy: try manager.copyItem(at: source, to: destination)
