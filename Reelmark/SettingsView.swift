@@ -3,7 +3,7 @@ import ReelmarkCore
 import SwiftUI
 
 /// Reelmark › Settings (⌘,): the TMDB token, the two library folders, and
-/// whether filing moves or copies.
+/// whether adding to the library copies or moves.
 struct SettingsView: View {
     @Environment(LibraryModel.self) private var model
     @State private var tokenText = ""
@@ -59,7 +59,7 @@ struct SettingsView: View {
             }
 
             Section {
-                Picker("When filing", selection: $model.mode) {
+                Picker("When adding to library", selection: $model.mode) {
                     Text("Copy").tag(MediaFiles.TransferMode.copy)
                     Text("Move").tag(MediaFiles.TransferMode.move)
                 }
