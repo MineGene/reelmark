@@ -4,7 +4,7 @@ Thanks for helping. Reelmark handles people's media libraries and sends data to 
 
 ## Privacy rules
 
-- **Never commit, attach or paste personal files**, real download names from your own library, or your TMDB token. Tests use invented release names and empty placeholder files.
+- **Never commit, attach or paste personal files**, real download names from your own library, or your own TMDB token. (The built-in token in `Reelmark/TMDBKey.swift` is Reelmark's and public on purpose.) Tests use invented release names and empty placeholder files.
 - **Commit with your GitHub no-reply email.** Turn on *Keep my email addresses private* at [github.com/settings/emails](https://github.com/settings/emails), then `git config user.email "<id>+<username>@users.noreply.github.com"`.
 - **Say when AI wrote it.** Much of Reelmark is written by Claude through Claude Code, and that's stated openly. If an AI tool wrote or substantially shaped your change, say so in the pull request and add a `Co-authored-by:` line for it.
 - Commit trailers are limited to `Signed-off-by`, `Co-authored-by`, `Fixes`, `Closes`, `Resolves`, `Refs` and `Claude-Session`. Any email in them must be a GitHub no-reply address or `noreply@anthropic.com`.
@@ -31,7 +31,7 @@ swift test --package-path Packages/ReelmarkCore
 
 ## Rules the code must keep
 
-See the "Rules the design depends on" section of `CLAUDE.md`: what may be sent and where, the fixed entitlements, never overwriting or deleting, the Keychain for the token, a tiny memory footprint, Apple's standard controls, and no third-party code.
+See the "Rules the design depends on" section of `CLAUDE.md`: what may be sent and where, the fixed entitlements, never overwriting or deleting, the built-in token and the Keychain for a person's own, a tiny memory footprint, Apple's standard controls, and no third-party code.
 
 ## Releases
 
