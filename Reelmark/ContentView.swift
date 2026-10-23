@@ -14,15 +14,19 @@ struct ContentView: View {
         @Bindable var model = model
         Group {
             if model.items.isEmpty {
-                EmptyState()
+                EmptyState(model: model)
             } else {
-                ItemTable(selection: $selection) { id in
+                ItemTable(model: model, selection: $selection) { id in
                     searchTitle = model.items.first(where: { $0.id == id })?.parsed.title ?? ""
                     searchingFor = id
                 }
             }
         }
         .toolbar { toolbar }
+        // Forget selected rows once they're gone from the list.
+        .onChange(of: model.items.count) {
+            selection.formIntersection(model.items.map(\.id))
+        }
         .dropDestination(for: URL.self) { urls, _ in
             model.add(urls)
             return true
@@ -78,8 +82,13 @@ struct ContentView: View {
 
 // MARK: - Empty window
 
+// The views below are handed the model directly instead of reading it from
+// the environment. Table rows being removed (Delete key, Clear) are laid out
+// once more after they've left the environment, and reading it then crashed
+// the app.
+
 private struct EmptyState: View {
-    @Environment(LibraryModel.self) private var model
+    let model: LibraryModel
 
     var body: some View {
         ContentUnavailableView {
@@ -99,9 +108,7 @@ private struct EmptyState: View {
 // MARK: - The list
 
 private struct ItemTable: View {
-    // Not `private`: a private property would make the generated
-    // initializer private too, and ContentView couldn't create this view.
-    @Environment(LibraryModel.self) var model
+    let model: LibraryModel
     @Binding var selection: Set<LibraryModel.Item.ID>
     let onSearch: (LibraryModel.Item.ID) -> Void
 
@@ -114,7 +121,7 @@ private struct ItemTable: View {
                     .help(item.source.lastPathComponent)
             }
             TableColumn("Match") { item in
-                MatchCell(item: item)
+                MatchCell(model: model, item: item)
             }
             TableColumn("New Name") { item in
                 Text(item.newPath ?? "—")
@@ -139,7 +146,7 @@ private struct ItemTable: View {
 }
 
 private struct MatchCell: View {
-    @Environment(LibraryModel.self) var model
+    let model: LibraryModel
     let item: LibraryModel.Item
 
     var body: some View {
