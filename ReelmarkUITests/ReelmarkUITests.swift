@@ -8,7 +8,15 @@ import XCTest
 /// list with four made-up items (see LibraryModel.forLaunch): one ready to
 /// copy, two already in the library and one with no match. No real files are
 /// touched and nothing goes online.
+///
+/// Items are found by their file names rather than by counting table rows:
+/// SwiftUI's Table doesn't promise how its rows appear to accessibility.
 final class ReelmarkUITests: XCTestCase {
+
+    private static let ready = "Ready.Movie.2020.mkv"
+    private static let copied = ["Copied.Movie.2020.mkv", "Another.Copied.Movie.2020.mkv"]
+    private static let unmatched = "Unknown.Thing.2020.mkv"
+    private static let all = [ready] + copied + [unmatched]
 
     @MainActor
     private func launch(withItems: Bool = true) -> XCUIApplication {
@@ -20,15 +28,23 @@ final class ReelmarkUITests: XCTestCase {
     }
 
     @MainActor
-    private func rows(_ app: XCUIApplication) -> XCUIElementQuery {
-        app.tables.firstMatch.tableRows
+    private func item(_ name: String, in app: XCUIApplication) -> XCUIElement {
+        app.staticTexts[name].firstMatch
     }
 
-    /// Waits up to 10 seconds for the list to have `count` rows.
+    /// Waits up to 10 seconds until exactly `names` are listed. On failure the
+    /// window's accessibility tree is printed to the log to show why.
     @MainActor
-    private func waitForRows(_ count: Int, in app: XCUIApplication) {
-        let predicate = NSPredicate(format: "count == %d", count)
-        wait(for: [expectation(for: predicate, evaluatedWith: rows(app))], timeout: 10)
+    private func waitForItems(_ names: [String], in app: XCUIApplication) {
+        let expectations = Self.all.map { name in
+            expectation(
+                for: NSPredicate(format: "exists == %@", NSNumber(value: names.contains(name))),
+                evaluatedWith: item(name, in: app))
+        }
+        if XCTWaiter().wait(for: expectations, timeout: 10) != .completed {
+            print(app.debugDescription)
+            XCTFail("Expected the list to show exactly \(names)")
+        }
     }
 
     @MainActor
@@ -46,34 +62,33 @@ final class ReelmarkUITests: XCTestCase {
     @MainActor
     func testListShowsEveryItem() {
         let app = launch()
-        waitForRows(4, in: app)
-        XCTAssertTrue(app.staticTexts["Ready.Movie.2020.mkv"].exists)
+        waitForItems(Self.all, in: app)
     }
 
     @MainActor
     func testDeleteKeyRemovesTheSelectedItem() {
         let app = launch()
-        waitForRows(4, in: app)
-        rows(app).element(boundBy: 0).click()
+        waitForItems(Self.all, in: app)
+        item(Self.unmatched, in: app).click()
         app.typeKey(.delete, modifierFlags: [])
-        waitForRows(3, in: app)
+        waitForItems([Self.ready] + Self.copied, in: app)
         assertStillRunning(app)
     }
 
     @MainActor
     func testClearRemovesItemsAlreadyInTheLibrary() {
         let app = launch()
-        waitForRows(4, in: app)
+        waitForItems(Self.all, in: app)
         app.buttons["Clear"].firstMatch.click()
-        waitForRows(2, in: app)
+        waitForItems([Self.ready, Self.unmatched], in: app)
         assertStillRunning(app)
     }
 
     @MainActor
     func testRemovingEverythingShowsTheEmptyWindow() {
         let app = launch()
-        waitForRows(4, in: app)
-        rows(app).element(boundBy: 0).click()
+        waitForItems(Self.all, in: app)
+        item(Self.ready, in: app).click()
         app.typeKey("a", modifierFlags: .command)
         app.typeKey(.delete, modifierFlags: [])
         XCTAssertTrue(app.staticTexts["Drag Movies and TV Episodes Here"].waitForExistence(timeout: 10))
@@ -83,9 +98,9 @@ final class ReelmarkUITests: XCTestCase {
     @MainActor
     func testCopyWithoutLibraryFoldersSaysWhatToDo() {
         let app = launch()
-        waitForRows(4, in: app)
+        waitForItems(Self.all, in: app)
         app.buttons["Copy 1 to Library"].firstMatch.click()
-        let message = app.staticTexts["Choose a Movies folder in Settings."]
+        let message = app.staticTexts["Choose a Movies folder in Settings."].firstMatch
         XCTAssertTrue(message.waitForExistence(timeout: 10))
         assertStillRunning(app)
     }
