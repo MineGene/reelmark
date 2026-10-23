@@ -31,6 +31,35 @@ final class ReelmarkMemoryTests: XCTestCase {
         print("::notice title=Memory::Reelmark footprint with \(Self.itemCount) items: \(megabytes) MB")
     }
 
+    /// A very long list must stay usable: sorting, selecting everything and
+    /// deleting it all should each finish promptly.
+    @MainActor
+    func testTenThousandItemsStayResponsive() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-ui-testing-items", "10000"]
+        app.launch()
+        let first = app.staticTexts["Made.Up.Show.S01E01.1080p.WEB.mkv"]
+        XCTAssertTrue(first.waitForExistence(timeout: 30))
+        XCTAssertTrue(app.staticTexts["10,000 items"].waitForExistence(timeout: 10))
+
+        let header = app.buttons["Downloaded File"].firstMatch
+        XCTAssertTrue(header.waitForExistence(timeout: 10))
+        header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+
+        if let footprint = Self.footprint(ofBundle: "com.minegene.reelmark") {
+            let megabytes = String(format: "%.1f", Double(footprint) / 1_048_576)
+            print("::notice title=Memory::Reelmark footprint with 10000 items: \(megabytes) MB")
+        }
+
+        app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH 'Made.Up.Show'")).firstMatch.click()
+        app.typeKey("a", modifierFlags: .command)
+        app.typeKey(.delete, modifierFlags: [])
+        XCTAssertTrue(app.staticTexts["Drag Movies and TV Episodes Here"].waitForExistence(timeout: 30))
+        XCTAssertEqual(app.state, .runningForeground, "Reelmark quit unexpectedly")
+    }
+
     /// The app's physical footprint in bytes, as Activity Monitor reports it.
     private static func footprint(ofBundle bundle: String) -> UInt64? {
         guard let pid = NSRunningApplication.runningApplications(withBundleIdentifier: bundle).first?

@@ -23,6 +23,7 @@ struct ContentView: View {
             }
         }
         .toolbar { toolbar }
+        .navigationSubtitle(itemCount)
         // Forget selected rows once they're gone from the list.
         .onChange(of: model.items.count) {
             selection.formIntersection(model.items.map(\.id))
@@ -58,6 +59,13 @@ struct ContentView: View {
                 .help("Add movies, episodes or download folders. You can also drag them into this window.")
         }
         ToolbarItemGroup(placement: .primaryAction) {
+            if model.isScanning {
+                ProgressView()
+                    .controlSize(.small)
+                    .help("Finding videos in what you added")
+                Button("Stop") { model.stopScanning() }
+                    .help("Stop searching the folders you added. Nothing found so far is added.")
+            }
             if !model.items.isEmpty {
                 // Empties the list (never touches any files). Not while
                 // copying, which still needs the items' file access.
@@ -80,6 +88,13 @@ struct ContentView: View {
                 model.mode == .copy
                     ? "Copy matched files into your library" : "Move matched files into your library")
         }
+    }
+
+    /// "1,234 items" under the window title, so a long list's size is clear.
+    private var itemCount: String {
+        let count = model.items.count
+        guard count > 0 else { return "" }
+        return count == 1 ? "1 item" : "\(count.formatted()) items"
     }
 
     /// Says what will happen, like Finder's Copy and Move: "Copy 3 to Library".

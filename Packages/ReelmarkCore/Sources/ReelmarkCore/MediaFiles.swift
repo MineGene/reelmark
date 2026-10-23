@@ -37,6 +37,8 @@ public enum MediaFiles {
     /// real folder is visited once, so a link back up the tree can't loop.
     /// A folder that can't be read is skipped and the rest are still searched.
     private static func collect(_ url: URL, into found: inout [URL], visited: inout Set<String>) {
+        // Run from a task (as Reelmark does), searching stops when it's cancelled.
+        if Task.isCancelled { return }
         let resolved = url.resolvingSymlinksInPath()
         let values = try? resolved.resourceValues(forKeys: [.isDirectoryKey, .isPackageKey])
         guard values?.isDirectory == true else {
