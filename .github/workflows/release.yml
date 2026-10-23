@@ -129,9 +129,14 @@ jobs:
           ## Install
 
           1. Download **$NAME** below, open it and drag Reelmark to Applications.
-          2. Open Reelmark. macOS will say it can't verify the developer — Reelmark is free and not notarised by Apple.
-          3. Open **System Settings › Privacy & Security**, scroll down and click **Open Anyway**, then confirm. Needed once per version.
-          4. First time only: open **Reelmark › Settings** and choose your Jellyfin Movies and Shows folders. There's no account to create: Reelmark comes with its own TMDB access token.
+          2. Reelmark is free and not notarised by Apple, so macOS blocks it until you say you trust this copy. Open **Terminal** and run this once, then open Reelmark as usual:
+
+             \`\`\`
+             xattr -dr com.apple.quarantine /Applications/Reelmark.app
+             \`\`\`
+
+             Needed once per version. Rather not use Terminal? Open Reelmark, then go to **System Settings › Privacy & Security**, scroll down, click **Open Anyway** and confirm.
+          3. First time only: open **Reelmark › Settings** and choose your Jellyfin Movies and Shows folders. There's no account to create: Reelmark comes with its own TMDB access token.
 
           Only download Reelmark from this Releases page.
 
