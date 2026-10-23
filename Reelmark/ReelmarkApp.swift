@@ -18,6 +18,9 @@ struct ReelmarkApp: App {
                 .environment(model)
                 .frame(minWidth: 760, minHeight: 420)
         }
+        // A fixed starting size, so a long list can't ask for a window taller
+        // than the screen. macOS remembers any size the person chooses.
+        .defaultSize(width: 960, height: 600)
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button("About Reelmark") { AboutPanel.show() }
