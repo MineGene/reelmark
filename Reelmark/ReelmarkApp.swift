@@ -10,7 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct ReelmarkApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @State private var model = LibraryModel()
+    @State private var model = LibraryModel.forLaunch()
 
     var body: some Scene {
         Window("Reelmark", id: "main") {

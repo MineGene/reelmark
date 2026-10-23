@@ -10,9 +10,20 @@
 		1DC9F17D1653636B2B2667A5 /* ReelmarkCore in Frameworks */ = {isa = PBXBuildFile; productRef = 73287E8560B92B9A8A9B74B1 /* ReelmarkCore */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		4E1A7C2B9D3F5A6B7C8D9E08 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A37AD7B463C8F11D85968DA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C6B3FA7B5DD167DE8E638A9C;
+			remoteInfo = Reelmark;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		0BA497A883E42641085888B2 /* ReelmarkCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ReelmarkCore; path = Packages/ReelmarkCore; sourceTree = SOURCE_ROOT; };
 		581129DDBD2AA8A866F83103 /* Reelmark.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Reelmark.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4E1A7C2B9D3F5A6B7C8D9E01 /* ReelmarkUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ReelmarkUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -23,6 +34,11 @@
 			explicitFolders = (
 			);
 			path = Reelmark;
+			sourceTree = "<group>";
+		};
+		4E1A7C2B9D3F5A6B7C8D9E02 /* ReelmarkUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ReelmarkUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -36,6 +52,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4E1A7C2B9D3F5A6B7C8D9E05 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -44,6 +67,7 @@
 			children = (
 				E5ADEA7AF007633A4894E85D /* Packages */,
 				AF7B8B45DAA94170D9D06D5D /* Reelmark */,
+				4E1A7C2B9D3F5A6B7C8D9E02 /* ReelmarkUITests */,
 				D67034DC41108F4B0C7AAE82 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -52,6 +76,7 @@
 			isa = PBXGroup;
 			children = (
 				581129DDBD2AA8A866F83103 /* Reelmark.app */,
+				4E1A7C2B9D3F5A6B7C8D9E01 /* ReelmarkUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -90,6 +115,27 @@
 			productReference = 581129DDBD2AA8A866F83103 /* Reelmark.app */;
 			productType = "com.apple.product-type.application";
 		};
+		4E1A7C2B9D3F5A6B7C8D9E03 /* ReelmarkUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4E1A7C2B9D3F5A6B7C8D9E0B /* Build configuration list for PBXNativeTarget "ReelmarkUITests" */;
+			buildPhases = (
+				4E1A7C2B9D3F5A6B7C8D9E04 /* Sources */,
+				4E1A7C2B9D3F5A6B7C8D9E05 /* Frameworks */,
+				4E1A7C2B9D3F5A6B7C8D9E06 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4E1A7C2B9D3F5A6B7C8D9E07 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				4E1A7C2B9D3F5A6B7C8D9E02 /* ReelmarkUITests */,
+			);
+			name = ReelmarkUITests;
+			productName = ReelmarkUITests;
+			productReference = 4E1A7C2B9D3F5A6B7C8D9E01 /* ReelmarkUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -102,6 +148,10 @@
 					C6B3FA7B5DD167DE8E638A9C = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Manual;
+					};
+					4E1A7C2B9D3F5A6B7C8D9E03 = {
+						ProvisioningStyle = Manual;
+						TestTargetID = C6B3FA7B5DD167DE8E638A9C;
 					};
 				};
 			};
@@ -123,12 +173,20 @@
 			projectRoot = "";
 			targets = (
 				C6B3FA7B5DD167DE8E638A9C /* Reelmark */,
+				4E1A7C2B9D3F5A6B7C8D9E03 /* ReelmarkUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		33C7D8387E865F21655F4B06 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4E1A7C2B9D3F5A6B7C8D9E06 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -145,7 +203,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4E1A7C2B9D3F5A6B7C8D9E04 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		4E1A7C2B9D3F5A6B7C8D9E07 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C6B3FA7B5DD167DE8E638A9C /* Reelmark */;
+			targetProxy = 4E1A7C2B9D3F5A6B7C8D9E08 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		2C08E883795B476321181E1F /* Debug */ = {
@@ -328,6 +401,32 @@
 			};
 			name = Release;
 		};
+		4E1A7C2B9D3F5A6B7C8D9E09 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.minegene.reelmark.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_TARGET_NAME = Reelmark;
+			};
+			name = Debug;
+		};
+		4E1A7C2B9D3F5A6B7C8D9E0A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.minegene.reelmark.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_TARGET_NAME = Reelmark;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -345,6 +444,15 @@
 			buildConfigurations = (
 				C09640C665E3F199704ECA6F /* Debug */,
 				FC5C7F0A59E83AE4988409D2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		4E1A7C2B9D3F5A6B7C8D9E0B /* Build configuration list for PBXNativeTarget "ReelmarkUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4E1A7C2B9D3F5A6B7C8D9E09 /* Debug */,
+				4E1A7C2B9D3F5A6B7C8D9E0A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
