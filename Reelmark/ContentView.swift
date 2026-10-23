@@ -198,17 +198,29 @@ private struct StatusIcon: View {
     let status: LibraryModel.Item.Status
 
     var body: some View {
+        // The hover text says why the icon is there; VoiceOver reads the same.
         switch status {
         case .done:
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(.green)
-                .accessibilityLabel("In library")
-        case .failed, .noMatch:
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.yellow)
-                .accessibilityLabel("Needs attention")
+                .help("In your library")
+                .accessibilityLabel("In your library")
+        case .noMatch:
+            warning(
+                "Not found on The Movie Database. Right-click and choose Search Again… "
+                    + "to try a different title.")
+        case .failed(let message):
+            warning(message)
         default:
             EmptyView()
         }
+    }
+
+    private func warning(_ reason: String) -> some View {
+        Image(systemName: "exclamationmark.triangle.fill")
+            .foregroundStyle(.yellow)
+            .help(reason)
+            .accessibilityLabel("Needs attention")
+            .accessibilityHint(reason)
     }
 }
