@@ -19,6 +19,9 @@ struct ReelmarkApp: App {
                 .frame(minWidth: 760, minHeight: 420)
         }
         .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Reelmark") { AboutPanel.show() }
+            }
             CommandGroup(replacing: .newItem) {
                 Button("Add Files…") { model.isImporting = true }
                     .keyboardShortcut("o")
