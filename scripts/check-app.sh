@@ -25,7 +25,10 @@ echo "None"
 
 echo "== Signature"
 codesign --verify --deep --strict --verbose=2 "$app"
-codesign -d --verbose=2 "$app" 2>&1 | grep -q "flags=.*runtime" || fail "Hardened runtime is not enabled"
+# Capture first: piping into "grep -q" lets grep exit early, codesign then
+# dies writing to the closed pipe, and pipefail reports a false failure.
+signature=$(codesign -d --verbose=2 "$app" 2>&1)
+grep -q "flags=.*runtime" <<<"$signature" || fail "Hardened runtime is not enabled"
 
 echo "== Entitlements"
 # Exactly these, nothing more. Changing this list is a sensitive change.
