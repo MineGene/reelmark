@@ -2,9 +2,8 @@ name: Auto-merge
 
 # Turns on squash auto-merge for the maintainer's own pull requests (which
 # includes every pull request Claude opens). GitHub then merges each one by
-# itself as soon as every required check passes, including the maintainer's
-# review label when sensitive files change. Nothing merges any sooner or
-# with fewer checks than a manual merge would.
+# itself as soon as every required check passes. Nothing merges any sooner
+# or with fewer checks than a manual merge would.
 #
 # Pull requests from forks and from Dependabot are left for the maintainer
 # to merge by hand.
