@@ -16,7 +16,7 @@ struct ContentView: View {
             if model.items.isEmpty {
                 EmptyState(model: model)
             } else {
-                ItemTable(model: model, selection: $selection) { id in
+                ItemList(model: model, selection: $selection) { id in
                     searchTitle = model.items.first(where: { $0.id == id })?.parsed.title ?? ""
                     searchingFor = id
                 }
@@ -110,126 +110,5 @@ private struct EmptyState: View {
         } actions: {
             Button("Add Files…") { model.isImporting = true }
         }
-    }
-}
-
-// MARK: - The list
-
-private struct ItemTable: View {
-    let model: LibraryModel
-    @Binding var selection: Set<LibraryModel.Item.ID>
-    let onSearch: (LibraryModel.Item.ID) -> Void
-    /// Empty until a column header is clicked: then that column, A to Z,
-    /// and Z to A on a second click, as in Finder.
-    @State private var sortOrder: [KeyPathComparator<LibraryModel.Item>] = []
-
-    private var sortedItems: [LibraryModel.Item] {
-        sortOrder.isEmpty ? model.items : model.items.sorted(using: sortOrder)
-    }
-
-    var body: some View {
-        Table(sortedItems, selection: $selection, sortOrder: $sortOrder) {
-            TableColumn("Downloaded File", value: \.fileName) { item in
-                Text(item.source.lastPathComponent)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .help(item.source.lastPathComponent)
-            }
-            TableColumn("Match", value: \.matchName) { item in
-                MatchCell(model: model, item: item)
-            }
-            TableColumn("New Name", value: \.newName) { item in
-                Text(item.newPath ?? "—")
-                    .lineLimit(1)
-                    .truncationMode(.head)
-                    .foregroundStyle(item.newPath == nil ? Color.secondary : Color.primary)
-                    .help(item.newPath ?? "")
-            }
-            TableColumn("", value: \.statusRank) { item in
-                StatusIcon(status: item.status)
-            }
-            .width(24)
-        }
-        .contextMenu(forSelectionType: LibraryModel.Item.ID.self) { ids in
-            if ids.count == 1, let id = ids.first {
-                Button("Search Again…") { onSearch(id) }
-            }
-            Button("Remove from List", role: .destructive) { model.remove(ids) }
-        }
-        .onDeleteCommand { model.remove(selection) }
-    }
-}
-
-private struct MatchCell: View {
-    let model: LibraryModel
-    let item: LibraryModel.Item
-
-    var body: some View {
-        switch item.status {
-        case .pending:
-            Text("Waiting…")
-                .foregroundStyle(.secondary)
-        case .searching:
-            HStack(spacing: 6) {
-                ProgressView().controlSize(.small)
-                Text("Searching…").foregroundStyle(.secondary)
-            }
-        case .noMatch:
-            Text("No match — right-click to search again")
-                .foregroundStyle(.secondary)
-        case .failed(let message):
-            Text(message)
-                .foregroundStyle(.secondary)
-                .help(message)
-        case .ready, .done:
-            if item.candidates.count > 1 && item.status == .ready {
-                Picker(
-                    "Match",
-                    selection: Binding(
-                        get: { item.matchID ?? 0 },
-                        set: { model.choose($0, for: item.id) })
-                ) {
-                    ForEach(item.candidates) { match in
-                        Text(match.displayName).tag(match.id)
-                    }
-                }
-                .labelsHidden()
-                .help(item.match?.overview ?? "")
-            } else {
-                Text(item.match?.displayName ?? "—")
-                    .help(item.match?.overview ?? "")
-            }
-        }
-    }
-}
-
-private struct StatusIcon: View {
-    let status: LibraryModel.Item.Status
-
-    var body: some View {
-        // The hover text says why the icon is there; VoiceOver reads the same.
-        switch status {
-        case .done:
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-                .help("In your library")
-                .accessibilityLabel("In your library")
-        case .noMatch:
-            warning(
-                "Not found on The Movie Database. Right-click and choose Search Again… "
-                    + "to try a different title.")
-        case .failed(let message):
-            warning(message)
-        default:
-            EmptyView()
-        }
-    }
-
-    private func warning(_ reason: String) -> some View {
-        Image(systemName: "exclamationmark.triangle.fill")
-            .foregroundStyle(.yellow)
-            .help(reason)
-            .accessibilityLabel("Needs attention")
-            .accessibilityHint(reason)
     }
 }

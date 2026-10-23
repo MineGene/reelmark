@@ -13,7 +13,7 @@ import ReelmarkCore
 @Observable
 final class LibraryModel {
 
-    struct Item: Identifiable {
+    struct Item: Identifiable, Equatable {
         enum Status: Equatable {
             case pending  // not looked up yet
             case searching
