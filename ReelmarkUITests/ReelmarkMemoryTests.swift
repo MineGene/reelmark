@@ -1,19 +1,17 @@
-import AppKit
-import Darwin
 import XCTest
 
 /// Measures how much memory Reelmark uses with a long list, so changes to
 /// the list can be compared ("the app runs on an 8 GB Mac alongside
-/// Jellyfin", CLAUDE.md). It reports the same "physical footprint" figure
-/// Activity Monitor shows as Memory, as a notice on the CI run.
+/// Jellyfin", CLAUDE.md), using XCTest's memory metric: the peak physical
+/// memory, as Activity Monitor counts it, appears in the UI tests log.
 final class ReelmarkMemoryTests: XCTestCase {
 
     private static let itemCount = 300
 
-    /// Launches with `count` made-up items and waits for the window. These
-    /// tests run first, and on a fresh CI machine the first launches have
-    /// come up with no window at all, so it relaunches (up to three times)
-    /// and logs which attempt worked.
+    /// Launches with `count` made-up items and waits for the window,
+    /// relaunching up to three times if it doesn't appear and logging which
+    /// attempt worked. (Its absence was once caused by passing the count as a
+    /// launch argument, which macOS read as a file to open.)
     @MainActor
     private func launch(withItems count: Int) throws -> XCUIApplication {
         continueAfterFailure = false
@@ -44,30 +42,18 @@ final class ReelmarkMemoryTests: XCTestCase {
             return XCTFail("The made-up list didn't appear")
         }
 
-        // Scroll the whole list down and back up, so every row has been drawn.
+        // XCTest's own memory measurement, recorded in the test log as
+        // "Memory Peak Physical" (kB) while the list scrolls to the bottom and
+        // back, so every row has been drawn. (Reading another app's memory
+        // directly isn't allowed from the sandboxed test runner in CI.)
         let list = app.scrollViews.firstMatch
-        for deltaY in [-2000.0, 2000.0] {
-            for _ in 0..<30 { list.scroll(byDeltaX: 0, deltaY: deltaY) }
-        }
-        XCTAssertEqual(app.state, .runningForeground, "Reelmark quit unexpectedly")
-
-        let footprint = try XCTUnwrap(Self.footprint(ofBundle: "com.minegene.reelmark"))
-        let megabytes = String(format: "%.1f", Double(footprint) / 1_048_576)
-        // A GitHub Actions notice, so the number shows on the check itself.
-        print("::notice title=Memory::Reelmark footprint with \(Self.itemCount) items: \(megabytes) MB")
-    }
-
-    /// The app's physical footprint in bytes, as Activity Monitor reports it.
-    private static func footprint(ofBundle bundle: String) -> UInt64? {
-        guard let pid = NSRunningApplication.runningApplications(withBundleIdentifier: bundle).first?
-            .processIdentifier
-        else { return nil }
-        var info = rusage_info_v6()
-        let result = withUnsafeMutablePointer(to: &info) {
-            $0.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) {
-                proc_pid_rusage(pid, RUSAGE_INFO_V6, $0)
+        let options = XCTMeasureOptions()
+        options.iterationCount = 1
+        measure(metrics: [XCTMemoryMetric(application: app)], options: options) {
+            for deltaY in [-5000.0, 5000.0] {
+                for _ in 0..<10 { list.scroll(byDeltaX: 0, deltaY: deltaY) }
             }
         }
-        return result == 0 ? info.ri_phys_footprint : nil
+        XCTAssertEqual(app.state, .runningForeground, "Reelmark quit unexpectedly")
     }
 }
