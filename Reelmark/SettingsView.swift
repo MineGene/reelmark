@@ -69,12 +69,6 @@ struct SettingsView: View {
                     Text("Move").tag(MediaFiles.TransferMode.move)
                 }
                 .pickerStyle(.segmented)
-            } footer: {
-                Text(
-                    "Copy leaves the download where it is, so Transmission can keep seeding. "
-                        + "On the same drive a copy takes no extra space until one of them is changed."
-                )
-                .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
