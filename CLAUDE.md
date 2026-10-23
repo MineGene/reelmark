@@ -9,9 +9,8 @@ Reelmark is a native macOS app (Swift, SwiftUI) that renames downloaded movies a
 - Turn off this environment's commit signing for the repo (`git config commit.gpgsign false`): its key isn't linked to the maintainer's account, so GitHub shows "Unverified". Squash-merge commits are signed by GitHub.
 - Stage files by name (`git add path/to/file`). Never use `git add -A`, `git add .` or `git commit -a`, and switch branches only with a clean working tree (`git status --short` empty).
 - Run `scripts/check-commits.sh origin/main HEAD` before pushing.
-- One change per branch and pull request. Open the pull request yourself (not as a draft); the *Auto-merge* workflow turns on squash auto-merge, so it merges by itself once every required check passes. Merged app changes are released automatically overnight (see `.github/workflows/release.yml`), so keep `main` releasable. Required checks: Commit privacy, Core tests (xcode-27), Build and check app, Analyze Swift, Reproducible build, Maintainer review for sensitive files.
+- One change per branch and pull request. Open the pull request yourself (not as a draft); the *Auto-merge* workflow turns on squash auto-merge, so it merges by itself once every required check passes. Merged app changes are released automatically overnight (see `.github/workflows/release.yml`), so keep `main` releasable. Required checks: Commit privacy, Core tests (xcode-27), Build and check app, Analyze Swift, Reproducible build.
 - Never push to `main` or force-push it; it is protected.
-- **Never add, remove or edit the `maintainer-reviewed` label.** It is the maintainer's review of sensitive files (see CONTRIBUTING.md, Workflow). When a pull request touches sensitive files, tell the maintainer which files and why, and wait.
 
 ## Building and testing
 

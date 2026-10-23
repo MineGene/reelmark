@@ -16,7 +16,6 @@ The *Commit privacy* check enforces the email and trailer rules on every pull re
 1. Branch from `main`; one change per pull request.
 2. Push and open a pull request. CI builds the app, runs the tests, checks permissions, web addresses and commit privacy, and runs CodeQL. Nothing needs a Mac except trying the app.
 3. The maintainer's pull requests (including Claude's) are squash-merged automatically once every required check passes: the *Auto-merge* workflow turns it on when they're opened. Pull requests from forks and Dependabot are merged by hand. The maintainer can still review, hold (turn off auto-merge) or close any pull request.
-4. **Sensitive files need the maintainer's review.** Changes to permissions (`Config/`), workflows and scripts (`.github/`, `scripts/`), the Xcode project, the network code (`TMDBClient.swift`), Keychain use (`Keychain.swift`), the pinned Xcode version or `CLAUDE.md` wait until the maintainer adds the `maintainer-reviewed` label. A new push removes the label, so the reviewed version is the one that merges.
 
 `main` is protected: no direct pushes, force pushes or deletions.
 
