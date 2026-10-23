@@ -76,11 +76,11 @@ final class ReelmarkUITests: XCTestCase {
     }
 
     @MainActor
-    func testClearRemovesItemsAlreadyInTheLibrary() {
+    func testClearEmptiesTheWholeList() {
         let app = launch()
         waitForItems(Self.all, in: app)
         app.buttons["Clear"].firstMatch.click()
-        waitForItems([Self.ready, Self.unmatched], in: app)
+        XCTAssertTrue(app.staticTexts["Drag Movies and TV Episodes Here"].waitForExistence(timeout: 10))
         assertStillRunning(app)
     }
 
