@@ -35,8 +35,13 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 ## Install
 
 1. Download the DMG from the [latest release](https://github.com/MineGene/reelmark/releases/latest), open it and drag Reelmark to Applications.
-2. Open Reelmark. macOS will say it can't verify the developer. Reelmark is free and isn't notarised by Apple, which needs a paid developer account.
-3. Open **System Settings › Privacy & Security**, scroll down, click **Open Anyway** and confirm. You'll need to do this once for each new version.
+2. Reelmark is free and isn't notarised by Apple (that needs a paid developer account), so macOS blocks it until you say you trust this copy. Open **Terminal**, run this once, then open Reelmark as usual:
+
+   ```sh
+   xattr -dr com.apple.quarantine /Applications/Reelmark.app
+   ```
+
+   You'll need to do this once for each new version. Rather not use Terminal? Open Reelmark, then go to **System Settings › Privacy & Security**, scroll down, click **Open Anyway** and confirm.
 
 ## Using Reelmark
 
@@ -68,7 +73,7 @@ Rebuilds match byte for byte, except the pixels of the app icon's pre-rendered p
 ## Questions
 
 **Why does macOS warn me when I first open it?**
-Apple's notarisation needs a paid developer account. Reelmark is free and unsigned, so macOS asks you to confirm once per version. You can check the download yourself with the steps above.
+Apple's notarisation needs a paid developer account. Reelmark is free and unsigned, so macOS asks you to confirm once per version, with the Terminal command or **Open Anyway** under Install. The command only removes the "downloaded from the internet" mark from Reelmark itself. You can check the download yourself first with the steps above.
 
 **Does it change or delete my downloads?**
 No. Copy leaves the original exactly where it is, and Move only moves it. Reelmark never deletes anything, and never overwrites a file that's already in your library.
