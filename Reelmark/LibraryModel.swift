@@ -427,7 +427,7 @@ final class LibraryModel {
             }
             let episode = String(format: "S%02dE%02d", number / 100 + 1, number % 100)
             return Item(
-                source: URL(filePath: "/ReelmarkUITests/Made.Up.Show.\(episode).1080p.WEB.mkv"),
+                source: URL(filePath: "/ReelmarkUITests/Made.Up.Show.\(episode).mkv"),
                 parsed: ParsedName(
                     title: "Made Up Show",
                     kind: .episode(season: number / 100 + 1, episodes: [number % 100])),
