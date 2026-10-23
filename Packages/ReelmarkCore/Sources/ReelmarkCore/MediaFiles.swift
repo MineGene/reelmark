@@ -5,31 +5,53 @@ import Foundation
 /// opened.
 public enum MediaFiles {
 
+    /// Every video type Jellyfin plays (its NamingOptions.VideoFileExtensions),
+    /// except a few that are usually something else: split archives (.001),
+    /// generic disc images (.bin, .img, .nrg) and DVD menu files (.ifo).
     public static let videoExtensions: Set<String> = [
-        "mkv", "mp4", "m4v", "avi", "mov", "wmv", "ts", "m2ts", "webm", "mpg", "mpeg",
+        "3g2", "3gp", "amv", "asf", "asx", "avi", "bivx", "divx", "dv", "dvr-ms", "f4v", "fli",
+        "flv", "iso", "m2t", "m2ts", "m2v", "m4v", "mk3d", "mkv", "mov", "mp4", "mpe", "mpeg",
+        "mpg", "mts", "mxf", "nsv", "nuv", "ogm", "ogv", "pva", "qt", "rec", "rm", "rmvb",
+        "strm", "svq3", "tp", "ts", "ty", "viv", "vob", "vp3", "webm", "wmv", "wtv", "xvid",
     ]
 
     /// Video files in the dropped items: files as they are, folders searched
-    /// all the way down. Hidden files and "sample" clips are skipped.
+    /// all the way down, including folders reached through links. Hidden
+    /// files and "sample" clips are skipped.
     public static func videos(in urls: [URL]) -> [URL] {
         var found: [URL] = []
-        for url in urls {
-            if isDirectory(url) {
-                let files = FileManager.default.enumerator(
-                    at: url, includingPropertiesForKeys: [.isRegularFileKey],
-                    options: [.skipsHiddenFiles, .skipsPackageDescendants])
-                while let file = files?.nextObject() as? URL {
-                    if isVideo(file) { found.append(file) }
-                }
-            } else if isVideo(url) {
-                found.append(url)
-            }
-        }
+        var visited: Set<String> = []
+        for url in urls { collect(url, into: &found, visited: &visited) }
         // Episodes in order, however the folders listed them. Paths are
         // resolved first: macOS can report one folder by two paths
-        // (/var/… and /private/var/…), which would scramble the order.
+        // (/var/… and /private/var/…), which would scramble the order, and
+        // a file reached through two links is listed once.
+        var seen: Set<String> = []
         let keyed = found.map { ($0, $0.resolvingSymlinksInPath().path) }
+            .filter { seen.insert($0.1).inserted }
         return keyed.sorted { $0.1.localizedStandardCompare($1.1) == .orderedAscending }.map(\.0)
+    }
+
+    /// Adds the video at `url`, or every video inside it if it's a folder.
+    /// Unlike FileManager's enumerator, this follows links to folders; each
+    /// real folder is visited once, so a link back up the tree can't loop.
+    /// A folder that can't be read is skipped and the rest are still searched.
+    private static func collect(_ url: URL, into found: inout [URL], visited: inout Set<String>) {
+        let resolved = url.resolvingSymlinksInPath()
+        let values = try? resolved.resourceValues(forKeys: [.isDirectoryKey, .isPackageKey])
+        guard values?.isDirectory == true else {
+            if isVideo(url) { found.append(url) }
+            return
+        }
+        // Apps and other bundles aren't media folders.
+        guard values?.isPackage != true, visited.insert(resolved.path).inserted else { return }
+        // List the real folder: listing through a link's own path doesn't
+        // follow the link.
+        let children =
+            (try? FileManager.default.contentsOfDirectory(
+                at: resolved, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]))
+            ?? []
+        for child in children { collect(child, into: &found, visited: &visited) }
     }
 
     static func isVideo(_ url: URL) -> Bool {
@@ -41,10 +63,6 @@ public enum MediaFiles {
             name.firstMatch(of: /(?:^|[ ._-])sample(?:$|[ ._-])/.ignoresCase()) != nil
             || url.deletingLastPathComponent().lastPathComponent.lowercased() == "sample"
         return !isSample
-    }
-
-    private static func isDirectory(_ url: URL) -> Bool {
-        (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
     }
 
     // MARK: - Moving into the library
