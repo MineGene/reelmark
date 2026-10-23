@@ -1,7 +1,7 @@
 import ReelmarkCore
 import SwiftUI
 
-/// The main window: drop files in, check the matches, press File.
+/// The main window: drag files in, check the matches, press Copy to Library.
 /// Standard SwiftUI controls only, so the window follows macOS's own design
 /// (materials, toolbar, light and dark, accessibility) without custom styling.
 struct ContentView: View {
@@ -55,12 +55,13 @@ struct ContentView: View {
     private var toolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .navigation) {
             Button("Add Files", systemImage: "plus") { model.isImporting = true }
-                .help("Add movies, episodes or whole download folders")
+                .help("Add movies, episodes or download folders. You can also drag them into this window.")
         }
         ToolbarItemGroup(placement: .primaryAction) {
             if model.items.contains(where: { $0.status == .done }) {
-                Button("Clear Filed", systemImage: "checkmark.circle") { model.clearDone() }
-                    .help("Remove filed items from the list")
+                // A plain "Clear", as in Safari's Downloads list.
+                Button("Clear") { model.clearDone() }
+                    .help("Remove items that are already in your library from this list")
             }
             Button {
                 Task { await model.renameReady() }
@@ -68,7 +69,7 @@ struct ContentView: View {
                 if model.isRenaming {
                     ProgressView().controlSize(.small)
                 } else {
-                    Text(model.readyCount > 0 ? "File \(model.readyCount)" : "File")
+                    Text(primaryActionTitle)
                 }
             }
             .buttonStyle(.borderedProminent)
@@ -77,6 +78,12 @@ struct ContentView: View {
                 model.mode == .copy
                     ? "Copy matched files into your library" : "Move matched files into your library")
         }
+    }
+
+    /// Says what will happen, like Finder's Copy and Move: "Copy 3 to Library".
+    private var primaryActionTitle: String {
+        let verb = model.mode == .copy ? "Copy" : "Move"
+        return model.readyCount > 0 ? "\(verb) \(model.readyCount) to Library" : "\(verb) to Library"
     }
 }
 
@@ -92,9 +99,12 @@ private struct EmptyState: View {
 
     var body: some View {
         ContentUnavailableView {
-            Label("Drop Movies and TV Episodes", systemImage: "film.stack")
+            Label("Drag Movies and TV Episodes Here", systemImage: "film.stack")
         } description: {
-            Text("Reelmark finds each title on The Movie Database and files it the way Jellyfin expects.")
+            Text(
+                "Drag video files or whole download folders into this window, or click Add Files. "
+                    + "Reelmark finds each title on The Movie Database "
+                    + "and names it the way Jellyfin expects.")
         } actions: {
             if model.token == nil {
                 SettingsLink { Text("Add Your TMDB Token…") }
@@ -196,7 +206,7 @@ private struct StatusIcon: View {
         case .done:
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(.green)
-                .accessibilityLabel("Filed")
+                .accessibilityLabel("In library")
         case .failed, .noMatch:
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(.yellow)
