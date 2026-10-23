@@ -79,7 +79,7 @@ Apple's notarisation needs a paid developer account. Reelmark is free and unsign
 No. Copy leaves the original exactly where it is, and Move only moves it. Reelmark never deletes anything, and never overwrites a file that's already in your library.
 
 **What about subtitles and other files?**
-Reelmark handles video files only (`mkv`, `mp4`, `m4v`, `avi`, `mov`, `wmv`, `ts`, `m2ts`, `webm`, `mpg`, `mpeg`). Subtitles and other files stay where they are.
+Reelmark handles video files only: every type Jellyfin plays, such as `mkv`, `mp4`, `avi`, `mov`, `ts`, `mts`, `vob`, `iso` and `webm`. It searches every folder you drag in, however deeply nested, including folders it reaches through links. Subtitles and other files stay where they are.
 
 **Does it update itself?**
 No. Reelmark never checks for updates, so new versions are on the [Releases](https://github.com/MineGene/reelmark/releases) page.

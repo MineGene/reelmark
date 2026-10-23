@@ -38,6 +38,43 @@ final class MediaFilesTests: XCTestCase {
             found.map(\.lastPathComponent), ["Movie.2020.MP4", "Show.S01E01.mkv", "Show.S01E02.mkv"])
     }
 
+    func testFindsEveryVideoTypeJellyfinPlays() throws {
+        for name in ["a.avi", "b.MTS", "c.vob", "d.flv", "e.iso", "f.divx", "g.ts", "h.wmv"] {
+            try make("Downloads/\(name)")
+        }
+        try make("Downloads/part.001")
+        try make("Downloads/disc.bin")
+
+        let found = MediaFiles.videos(in: [root.appending(path: "Downloads")])
+        XCTAssertEqual(
+            found.map(\.lastPathComponent),
+            ["a.avi", "b.MTS", "c.vob", "d.flv", "e.iso", "f.divx", "g.ts", "h.wmv"])
+    }
+
+    func testSearchesEveryLevelOfAFolder() throws {
+        try make("Pack/Show.S01/Disc 1/Extras/Show.S01E01.mkv")
+        try make("Pack/Show.S02/Show.S02E01.mkv")
+        try make("Pack/Movie.2020.mp4")
+
+        let found = MediaFiles.videos(in: [root.appending(path: "Pack")])
+        XCTAssertEqual(
+            found.map(\.lastPathComponent), ["Movie.2020.mp4", "Show.S01E01.mkv", "Show.S02E01.mkv"])
+    }
+
+    func testFollowsLinkedFoldersWithoutLooping() throws {
+        try make("Elsewhere/Movie.2021.mkv")
+        try make("Drop/Movie.2020.mkv")
+        let fm = FileManager.default
+        try fm.createSymbolicLink(
+            at: root.appending(path: "Drop/Linked"), withDestinationURL: root.appending(path: "Elsewhere"))
+        // A link back to the dropped folder itself must not loop forever.
+        try fm.createSymbolicLink(
+            at: root.appending(path: "Drop/Loop"), withDestinationURL: root.appending(path: "Drop"))
+
+        let found = MediaFiles.videos(in: [root.appending(path: "Drop")])
+        XCTAssertEqual(found.map(\.lastPathComponent), ["Movie.2020.mkv", "Movie.2021.mkv"])
+    }
+
     func testSampleInsideAWordIsKept() {
         XCTAssertTrue(MediaFiles.isVideo(URL(filePath: "/x/The.Sampler.2021.mkv")))
     }
