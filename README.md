@@ -20,11 +20,11 @@ The TMDB id in each folder name tells Jellyfin precisely which title it is, so r
 
 Download the DMG from [Releases](https://github.com/MineGene/reelmark/releases) and follow the steps in the release notes. Reelmark isn't notarised by Apple (that needs a paid developer account), so the first launch needs **Open Anyway** in System Settings › Privacy & Security.
 
-You'll need a free TMDB access token: create an account at [themoviedb.org](https://www.themoviedb.org/signup), open [Settings › API](https://www.themoviedb.org/settings/api), and copy the **API Read Access Token** into Reelmark › Settings. It's stored in your Keychain.
+There's nothing to set up: Reelmark comes with its own access token for The Movie Database (TMDB). If you'd rather use your own, copy the **API Read Access Token** from your [TMDB account](https://www.themoviedb.org/settings/api) into Reelmark › Settings; it's stored in your Keychain.
 
 ## Privacy
 
-- The only thing Reelmark sends anywhere is a title and year — for example "Severance" — to TMDB's API, with your token. File names, folders and everything else stay on your Mac.
+- The only thing Reelmark sends anywhere is a title and year — for example "Severance" — to TMDB's API, with an access token. File names, folders and everything else stay on your Mac.
 - No analytics, no crash reporting, no update checks, nothing written about your files.
 - Sandboxed: Reelmark can only touch files you drop in and the two library folders you choose.
 - Every release is checked automatically: exact permissions, TMDB as the only web address in the app, and a reproducible build anyone can verify with `scripts/verify-release.sh`.

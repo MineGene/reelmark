@@ -106,10 +106,6 @@ private struct EmptyState: View {
                     + "Reelmark finds each title on The Movie Database "
                     + "and names it the way Jellyfin expects.")
         } actions: {
-            if model.token == nil {
-                SettingsLink { Text("Add Your TMDB Token…") }
-                    .buttonStyle(.borderedProminent)
-            }
             Button("Add Files…") { model.isImporting = true }
         }
     }
@@ -162,7 +158,7 @@ private struct MatchCell: View {
     var body: some View {
         switch item.status {
         case .pending:
-            Text(model.token == nil ? "Needs a TMDB token (Settings)" : "Waiting…")
+            Text("Waiting…")
                 .foregroundStyle(.secondary)
         case .searching:
             HStack(spacing: 6) {

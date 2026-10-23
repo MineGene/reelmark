@@ -15,16 +15,19 @@ struct SettingsView: View {
         @Bindable var model = model
         Form {
             Section {
-                if model.token != nil {
+                if model.ownToken != nil {
                     LabeledContent("Access token") {
                         HStack {
-                            Label("Saved in your Keychain", systemImage: "checkmark.seal.fill")
+                            Label("Your own, saved in your Keychain", systemImage: "checkmark.seal.fill")
                                 .foregroundStyle(.secondary)
                             Button("Remove") { model.removeToken() }
                         }
                     }
                 } else {
-                    SecureField("API Read Access Token", text: $tokenText)
+                    LabeledContent("Access token") {
+                        Text("Built in").foregroundStyle(.secondary)
+                    }
+                    SecureField("Your own token (optional)", text: $tokenText)
                     HStack {
                         Link(
                             "Get a free token at themoviedb.org",
@@ -42,7 +45,9 @@ struct SettingsView: View {
                 Text("The Movie Database")
             } footer: {
                 Text(
-                    "Only a title and year are ever sent to TMDB — never file names or folders. "
+                    "Reelmark comes with its own access token, so there's nothing to set up. "
+                        + "You can use your own TMDB token instead if you prefer. "
+                        + "Only a title and year are ever sent to TMDB — never file names or folders. "
                         + "This product uses the TMDB API but is not endorsed or certified by TMDB."
                 )
                 .foregroundStyle(.secondary)
