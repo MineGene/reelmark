@@ -299,12 +299,35 @@ final class LibraryModel {
                     parsed: ParsedName(title: title, year: 2020, kind: .movie),
                     candidates: found, matchID: found.first?.id, status: status)
             }
+            let arguments = CommandLine.arguments
+            if let flag = arguments.firstIndex(of: "-ui-testing-items"), flag + 1 < arguments.count,
+                let count = Int(arguments[flag + 1])
+            {
+                items = (1...max(count, 1)).map(Self.uiTestEpisode)
+                return
+            }
             items = [
                 item(1, "Ready.Movie.2020.mkv", "Ready Movie", .ready),
                 item(2, "Copied.Movie.2020.mkv", "Copied Movie", .done),
                 item(3, "Another.Copied.Movie.2020.mkv", "Another Copied Movie", .done),
                 item(4, "Unknown.Thing.2020.mkv", "Unknown Thing", .noMatch),
             ]
+        }
+
+        /// For the memory test ("-ui-testing-items 300"): a long season pack
+        /// where every row offers three possible matches, the heaviest kind
+        /// of row the list draws.
+        private static func uiTestEpisode(_ number: Int) -> Item {
+            let shows = (0..<3).map {
+                Match(id: number * 10 + $0, kind: .show, title: "Made Up Show \($0 + 1)", year: 2020 + $0)
+            }
+            let episode = String(format: "S%02dE%02d", number / 100 + 1, number % 100)
+            return Item(
+                source: URL(filePath: "/ReelmarkUITests/Made.Up.Show.\(episode).1080p.WEB.mkv"),
+                parsed: ParsedName(
+                    title: "Made Up Show",
+                    kind: .episode(season: number / 100 + 1, episodes: [number % 100])),
+                candidates: shows, matchID: shows[0].id, status: .ready)
         }
     }
 #else
