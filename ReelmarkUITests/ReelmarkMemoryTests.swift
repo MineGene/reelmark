@@ -16,7 +16,10 @@ final class ReelmarkMemoryTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-ui-testing-items", "\(Self.itemCount)"]
         app.launch()
-        XCTAssertTrue(app.staticTexts["Made.Up.Show.S01E01.1080p.WEB.mkv"].waitForExistence(timeout: 20))
+        guard app.staticTexts["Made.Up.Show.S01E01.mkv"].waitForExistence(timeout: 20) else {
+            print(app.debugDescription)  // shows in the log what the window had instead
+            return XCTFail("The made-up list didn't appear")
+        }
 
         // Scroll the whole list down and back up, so every row has been drawn.
         let list = app.scrollViews.firstMatch
