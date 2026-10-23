@@ -38,6 +38,19 @@ final class LibraryModel {
                 JellyfinNaming.relativePath(for: parsed, match: $0, fileExtension: source.pathExtension)
             }
         }
+
+        // What each column of the list sorts by.
+        var fileName: String { source.lastPathComponent }
+        var matchName: String { match?.displayName ?? "" }
+        var newName: String { newPath ?? "" }
+        /// Items that need attention first, then waiting, then done.
+        var statusRank: Int {
+            switch status {
+            case .noMatch, .failed: 0
+            case .pending, .searching, .ready: 1
+            case .done: 2
+            }
+        }
     }
 
     private(set) var items: [Item] = []
