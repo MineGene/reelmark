@@ -33,7 +33,9 @@ fi
 
 # Files that end up in, or decide what goes into, the app.
 app='^(Reelmark/|Packages/ReelmarkCore/Sources/|Packages/ReelmarkCore/Package\.swift$|Config/|Reelmark\.xcodeproj/|\.xcode-version$)'
-if git diff --name-only "$last" HEAD | grep -qE "$app"; then
+# Capture first, so grep stopping early can't fail the pipe (see check-app.sh).
+changed=$(git diff --name-only "$last" HEAD)
+if grep -qE "$app" <<<"$changed"; then
   IFS=. read -r major minor patch <<<"${last#v}"
   echo "$major.$minor.$((patch + 1))"
 else
