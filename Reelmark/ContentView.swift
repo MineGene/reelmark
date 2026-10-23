@@ -58,10 +58,12 @@ struct ContentView: View {
                 .help("Add movies, episodes or download folders. You can also drag them into this window.")
         }
         ToolbarItemGroup(placement: .primaryAction) {
-            if model.items.contains(where: { $0.status == .done }) {
-                // A plain "Clear", as in Safari's Downloads list.
-                Button("Clear") { model.clearDone() }
-                    .help("Remove items that are already in your library from this list")
+            if !model.items.isEmpty {
+                // Empties the list (never touches any files). Not while
+                // copying, which still needs the items' file access.
+                Button("Clear") { model.clear() }
+                    .disabled(model.isRenaming)
+                    .help("Remove everything from this list. Your files aren't changed.")
             }
             Button {
                 Task { await model.renameReady() }
@@ -205,17 +207,29 @@ private struct StatusIcon: View {
     let status: LibraryModel.Item.Status
 
     var body: some View {
+        // The hover text says why the icon is there; VoiceOver reads the same.
         switch status {
         case .done:
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(.green)
-                .accessibilityLabel("In library")
-        case .failed, .noMatch:
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.yellow)
-                .accessibilityLabel("Needs attention")
+                .help("In your library")
+                .accessibilityLabel("In your library")
+        case .noMatch:
+            warning(
+                "Not found on The Movie Database. Right-click and choose Search Again… "
+                    + "to try a different title.")
+        case .failed(let message):
+            warning(message)
         default:
             EmptyView()
         }
+    }
+
+    private func warning(_ reason: String) -> some View {
+        Image(systemName: "exclamationmark.triangle.fill")
+            .foregroundStyle(.yellow)
+            .help(reason)
+            .accessibilityLabel("Needs attention")
+            .accessibilityHint(reason)
     }
 }
