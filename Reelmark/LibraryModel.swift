@@ -44,7 +44,11 @@ final class LibraryModel {
     private(set) var isRenaming = false
     var isImporting = false
 
-    private(set) var token: String? = Keychain.readToken()
+    /// The person's own TMDB token, if they've added one in Settings.
+    private(set) var ownToken: String? = Keychain.readToken()
+    /// The token searches use: their own if they added one, otherwise
+    /// Reelmark's built-in one, so the app works with no setup.
+    var token: String { ownToken ?? TMDBKey.builtIn }
     private(set) var moviesFolder: URL? = LibraryFolders.url(for: .movie)
     private(set) var showsFolder: URL? = LibraryFolders.url(for: .show)
 
@@ -125,7 +129,7 @@ final class LibraryModel {
 
     /// Looks up waiting items one at a time, gently on TMDB and on memory.
     private func lookUpPending() {
-        guard lookup == nil, let token else { return }
+        guard lookup == nil else { return }
         lookup = Task {
             // A cancelled lookup was already replaced; leave the new one be.
             defer { if !Task.isCancelled { lookup = nil } }
@@ -152,7 +156,7 @@ final class LibraryModel {
 
                 // The item may have been removed while we waited.
                 guard let current = items.firstIndex(where: { $0.id == id }) else { continue }
-                // Stopped (token removed): leave it waiting rather than failed.
+                // Stopped (token changed): leave it waiting rather than failed.
                 if Task.isCancelled {
                     items[current].status = .pending
                     break
@@ -209,28 +213,32 @@ final class LibraryModel {
 
     // MARK: - Settings
 
-    /// Checks the token with TMDB before saving it to the Keychain.
+    /// Checks the person's own token with TMDB before saving it to the Keychain.
     func saveToken(_ newToken: String) async throws {
         let trimmed = newToken.trimmingCharacters(in: .whitespacesAndNewlines)
         try await TMDBClient(token: trimmed).validateToken()
         guard Keychain.saveToken(trimmed) else { throw KeychainError() }
-        token = trimmed
-        // Retry anything that failed for want of a working token.
-        for index in items.indices where Self.isAuthError(items[index].status) {
+        ownToken = trimmed
+        restartLookups()
+    }
+
+    /// Goes back to Reelmark's built-in token.
+    func removeToken() {
+        Keychain.deleteToken()
+        ownToken = nil
+        restartLookups()
+    }
+
+    /// Searches again with the current token: anything mid-search or
+    /// rejected for its token goes back to waiting.
+    private func restartLookups() {
+        lookup?.cancel()
+        lookup = nil
+        for index in items.indices
+        where items[index].status == .searching || Self.isAuthError(items[index].status) {
             items[index].status = .pending
         }
         lookUpPending()
-    }
-
-    func removeToken() {
-        lookup?.cancel()
-        lookup = nil
-        // Anything mid-search goes back to waiting for a token.
-        for index in items.indices where items[index].status == .searching {
-            items[index].status = .pending
-        }
-        Keychain.deleteToken()
-        token = nil
     }
 
     func setFolder(_ url: URL, for kind: Match.Kind) throws {
@@ -247,7 +255,7 @@ final class LibraryModel {
         var errorDescription: String? { "The token couldn't be saved to your Keychain." }
     }
 
-    private static let authMessage = "TMDB didn't accept your access token. Check it in Settings."
+    private static let authMessage = "TMDB didn't accept the access token. Check it in Settings."
 
     private static func isAuthError(_ status: Item.Status) -> Bool {
         status == .failed(authMessage)

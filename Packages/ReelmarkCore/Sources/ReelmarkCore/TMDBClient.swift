@@ -4,7 +4,7 @@ import Foundation
 /// Jellyfin uses by default, so ids match what the server expects.
 ///
 /// Privacy: the only things ever sent are a cleaned-up title, a year, and
-/// the user's own TMDB access token. File names, folder paths and anything
+/// a TMDB access token. File names, folder paths and anything
 /// else about the user's files never leave the Mac. Requests go over HTTPS
 /// with no cache, cookies or other stored state.
 public struct TMDBClient: Sendable {

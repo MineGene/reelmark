@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest something Reelmark could do better
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reelmark stays small on purpose: it renames files for Jellyfin, sends only a title and year to TMDB, and never deletes or overwrites anything. Ideas that fit that are very welcome.
+        **Please don't attach media files, screenshots of your library, or your own TMDB token.**
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The situation or problem, rather than a specific solution.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+  - type: input
+    id: example
+    attributes:
+      label: Example file name (if it's about matching or naming)
+      description: A made-up name in the same style is fine.
+      placeholder: Show.Name.S01E02.1080p.WEB.H264-GROUP.mkv
