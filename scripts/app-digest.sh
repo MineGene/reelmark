@@ -14,18 +14,21 @@
 # Usage: scripts/app-digest.sh path/to/Reelmark.app
 set -euo pipefail
 
-# Assets.car contents, normalised: every image's checksum and properties,
-# minus the random IDs and timestamps Apple's asset compiler adds, and the
-# checksum and stored size of "Icon Image" entries (the pre-rendered icon).
-# assetutil prints one key per line with keys sorted, so each entry's
-# AssetType comes before its SHA1Digest and SizeOnDisk.
+# Assets.car contents: only what's in the file, so any Mac's assetutil gives
+# the same answer. assetutil's header describes the tool reading the file
+# (its own and CoreUI's version), which differs between macOS versions, so
+# it's left out, as are random IDs, timestamps and stored sizes. Each entry
+# keeps its type, name, appearance, scale, pixel size, encoding and content
+# checksum, and the checksums of an icon group's layers. "Icon Image"
+# entries (the pre-rendered icon) keep everything except their checksum.
+# jq ships with macOS 15 and later.
 normalised_assets() {
-  xcrun assetutil --info "$1" \
-    | grep -v -E '"(Timestamp|Key Format)"' \
-    | sed -E 's/[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}-[0-9]+-[0-9A-F]{16}/ID/g' \
-    | awk '/"AssetType" :/ { icon = ($0 ~ /"Icon Image"/) }
-      icon && /"(SHA1Digest|SizeOnDisk)" :/ { next }
-      { print }'
+  xcrun assetutil --info "$1" | jq -S '
+    [ .[1:][]
+      | { AssetType, Name, Appearance, Scale, PixelWidth, PixelHeight, Encoding,
+          Layers: [ .Layers[]? | { Name, SHA1Digest } ],
+          SHA1Digest: (if .AssetType == "Icon Image" then null else .SHA1Digest end) } ]
+    | sort'
 }
 if [ "${1:-}" = "--assets" ]; then
   normalised_assets "${2:?usage: app-digest.sh --assets path/to/Assets.car}"
