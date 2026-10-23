@@ -76,11 +76,11 @@ final class ReelmarkUITests: XCTestCase {
     }
 
     @MainActor
-    func testClearRemovesItemsAlreadyInTheLibrary() {
+    func testClearEmptiesTheWholeList() {
         let app = launch()
         waitForItems(Self.all, in: app)
         app.buttons["Clear"].firstMatch.click()
-        waitForItems([Self.ready, Self.unmatched], in: app)
+        XCTAssertTrue(app.staticTexts["Drag Movies and TV Episodes Here"].waitForExistence(timeout: 10))
         assertStillRunning(app)
     }
 
@@ -120,6 +120,29 @@ final class ReelmarkUITests: XCTestCase {
         app.menuItems["About Reelmark"].click()
         let version = app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH 'Version'")).firstMatch
         XCTAssertTrue(version.waitForExistence(timeout: 10))
+        assertStillRunning(app)
+    }
+
+    @MainActor
+    func testClickingAColumnHeaderSortsBothWays() {
+        let app = launch()
+        waitForItems(Self.all, in: app)
+        let header = app.buttons["Downloaded File"].firstMatch
+        guard header.waitForExistence(timeout: 10) else {
+            print(app.debugDescription)
+            return XCTFail("No Downloaded File column header")
+        }
+        // Listed in order: Ready…, Copied…, Another.Copied…, Unknown…
+        let ready = item(Self.ready, in: app)
+        let another = item("Another.Copied.Movie.2020.mkv", in: app)
+
+        // Table header buttons report themselves as not hittable to UI
+        // tests even when visible, so click the middle of the header itself.
+        let headerCentre = header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        headerCentre.click()  // A to Z: Another.Copied… comes before Ready…
+        XCTAssertLessThan(another.frame.minY, ready.frame.minY)
+        headerCentre.click()  // Z to A
+        XCTAssertLessThan(ready.frame.minY, another.frame.minY)
         assertStillRunning(app)
     }
 }

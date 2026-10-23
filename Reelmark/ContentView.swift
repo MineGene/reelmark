@@ -58,10 +58,12 @@ struct ContentView: View {
                 .help("Add movies, episodes or download folders. You can also drag them into this window.")
         }
         ToolbarItemGroup(placement: .primaryAction) {
-            if model.items.contains(where: { $0.status == .done }) {
-                // A plain "Clear", as in Safari's Downloads list.
-                Button("Clear") { model.clearDone() }
-                    .help("Remove items that are already in your library from this list")
+            if !model.items.isEmpty {
+                // Empties the list (never touches any files). Not while
+                // copying, which still needs the items' file access.
+                Button("Clear") { model.clear() }
+                    .disabled(model.isRenaming)
+                    .help("Remove everything from this list. Your files aren't changed.")
             }
             Button {
                 Task { await model.renameReady() }
@@ -117,26 +119,33 @@ private struct ItemTable: View {
     let model: LibraryModel
     @Binding var selection: Set<LibraryModel.Item.ID>
     let onSearch: (LibraryModel.Item.ID) -> Void
+    /// Empty until a column header is clicked: then that column, A to Z,
+    /// and Z to A on a second click, as in Finder.
+    @State private var sortOrder: [KeyPathComparator<LibraryModel.Item>] = []
+
+    private var sortedItems: [LibraryModel.Item] {
+        sortOrder.isEmpty ? model.items : model.items.sorted(using: sortOrder)
+    }
 
     var body: some View {
-        Table(model.items, selection: $selection) {
-            TableColumn("Downloaded File") { item in
+        Table(sortedItems, selection: $selection, sortOrder: $sortOrder) {
+            TableColumn("Downloaded File", value: \.fileName) { item in
                 Text(item.source.lastPathComponent)
                     .lineLimit(1)
                     .truncationMode(.middle)
                     .help(item.source.lastPathComponent)
             }
-            TableColumn("Match") { item in
+            TableColumn("Match", value: \.matchName) { item in
                 MatchCell(model: model, item: item)
             }
-            TableColumn("New Name") { item in
+            TableColumn("New Name", value: \.newName) { item in
                 Text(item.newPath ?? "—")
                     .lineLimit(1)
                     .truncationMode(.head)
                     .foregroundStyle(item.newPath == nil ? Color.secondary : Color.primary)
                     .help(item.newPath ?? "")
             }
-            TableColumn("") { item in
+            TableColumn("", value: \.statusRank) { item in
                 StatusIcon(status: item.status)
             }
             .width(24)
@@ -198,17 +207,29 @@ private struct StatusIcon: View {
     let status: LibraryModel.Item.Status
 
     var body: some View {
+        // The hover text says why the icon is there; VoiceOver reads the same.
         switch status {
         case .done:
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(.green)
-                .accessibilityLabel("In library")
-        case .failed, .noMatch:
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.yellow)
-                .accessibilityLabel("Needs attention")
+                .help("In your library")
+                .accessibilityLabel("In your library")
+        case .noMatch:
+            warning(
+                "Not found on The Movie Database. Right-click and choose Search Again… "
+                    + "to try a different title.")
+        case .failed(let message):
+            warning(message)
         default:
             EmptyView()
         }
+    }
+
+    private func warning(_ reason: String) -> some View {
+        Image(systemName: "exclamationmark.triangle.fill")
+            .foregroundStyle(.yellow)
+            .help(reason)
+            .accessibilityLabel("Needs attention")
+            .accessibilityHint(reason)
     }
 }
