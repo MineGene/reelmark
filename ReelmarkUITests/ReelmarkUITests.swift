@@ -115,7 +115,6 @@ final class ReelmarkUITests: XCTestCase {
             app.terminate()
         }
     }
-    }
 
     /// VoiceOver reads each row as one sentence: file, match and what happens next.
     @MainActor
