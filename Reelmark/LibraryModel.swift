@@ -61,6 +61,10 @@ final class LibraryModel {
     private(set) var isRenaming = false
     /// True while dropped folders are still being searched for videos.
     private(set) var isScanning = false
+    /// The first item of the latest batch added (drop, Add Files, Open With
+    /// or Shortcuts), for the list to scroll to and select once, as Finder
+    /// does with pasted files. Further lookups don't move the list again.
+    private(set) var firstAdded: Item.ID?
     var isImporting = false
     /// Which report Help › Report a Bug… or Request a Feature… is previewing.
     var report: IssueLink.Kind?
@@ -128,6 +132,7 @@ final class LibraryModel {
             let fresh = found.filter { !present.contains($0.source) }
             items.append(contentsOf: fresh)
             reindex()
+            if let first = fresh.first { firstAdded = first.id }
             waiting.append(contentsOf: fresh.map(\.id))
             lookUpPending()
         }

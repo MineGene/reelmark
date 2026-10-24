@@ -20,6 +20,8 @@ struct ItemList: NSViewRepresentable {
     /// The items to show: all of the model's, or those the search finds.
     let items: [Item]
     @Binding var selection: Set<Item.ID>
+    /// A row to scroll into view once, when it changes.
+    let reveal: Item.ID?
     let onSearch: (Item.ID) -> Void
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
@@ -52,6 +54,7 @@ struct ItemList: NSViewRepresentable {
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         context.coordinator.parent = self
         context.coordinator.show(items, selection: selection)
+        context.coordinator.reveal(reveal)
     }
 
     // MARK: - Columns
@@ -88,6 +91,7 @@ struct ItemList: NSViewRepresentable {
         /// The items in the order shown (sorted by the clicked header, if any).
         private var rows: [Item] = []
         private var isSyncingSelection = false
+        private var revealed: Item.ID?
 
         init(_ parent: ItemList) { self.parent = parent }
 
@@ -106,6 +110,16 @@ struct ItemList: NSViewRepresentable {
                 table.selectRowIndexes(wanted, byExtendingSelection: false)
                 isSyncingSelection = false
             }
+        }
+
+        /// Scrolls a newly added row into view, once per request, so new
+        /// files aren't left out of sight at the end of a long list.
+        func reveal(_ id: Item.ID?) {
+            guard let id, id != revealed, let table,
+                let row = rows.firstIndex(where: { $0.id == id })
+            else { return }
+            revealed = id
+            table.scrollRowToVisible(row)
         }
 
         private static func sorted(_ items: [Item], by descriptors: [NSSortDescriptor]) -> [Item] {

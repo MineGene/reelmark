@@ -48,7 +48,7 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 ## Using Reelmark
 
 1. **Choose your library folders:** the first time you copy, Reelmark asks for your Jellyfin Movies or Shows folder. You can change them any time in **Reelmark › Settings**.
-2. **Add downloads:** drag video files or whole download folders into the window, or click **Add Files** (⌘O). Reelmark looks up each one on TMDB.
+2. **Add downloads:** drag video files or whole download folders into the window, or click **Add Files** (⌘O). Reelmark looks up each one on TMDB. In a long list, it scrolls to the first new file and selects it.
 3. **Check the matches:** the New Name column shows where each file will go. In a long list, type in the search field (⌘F) to show only the files, matches or new names containing those words. If there's more than one possible match, pick the right one from the menu. To search with a different title, right-click and choose **Search Again…**.
 4. **Copy to Library:** click **Copy to Library**, or **Move to Library** if you've chosen Move in Settings. **Clear** empties the list when you're done (your files aren't touched), and Delete removes just the selected items. Changed your mind? **Edit ▸ Undo** (⌘Z) puts moved files back and sends copies to the Trash, and **Edit ▸ Redo** (⇧⌘Z) files them again.
 

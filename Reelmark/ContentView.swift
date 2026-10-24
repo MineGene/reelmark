@@ -24,7 +24,9 @@ struct ContentView: View {
             if model.items.isEmpty {
                 EmptyState(model: model)
             } else {
-                ItemList(model: model, items: shown, selection: $selection, onSearch: searchAgain)
+                ItemList(
+                    model: model, items: shown, selection: $selection, reveal: model.firstAdded,
+                    onSearch: searchAgain)
                     .overlay {
                         if shown.isEmpty { ContentUnavailableView.search(text: searchText) }
                     }
@@ -53,6 +55,11 @@ struct ContentView: View {
         // the search, so menu commands never act on rows that can't be seen.
         .onChange(of: model.items.count) {
             selection.formIntersection(shownItems.map(\.id))
+        }
+        // Select the first of newly added files, as Finder does with pasted
+        // ones (the list scrolls to it), unless the search hides it.
+        .onChange(of: model.firstAdded) {
+            if let id = model.firstAdded, shownItems.contains(where: { $0.id == id }) { selection = [id] }
         }
         .onChange(of: searchText) {
             selection.formIntersection(shownItems.map(\.id))
