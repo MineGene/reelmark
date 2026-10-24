@@ -338,6 +338,9 @@ private final class LabelCell: NSTableCellView {
         field.lineBreakMode = truncation
         field.textColor = dimmed ? .secondaryLabelColor : .labelColor
         field.toolTip = help
+        // The cell is what VoiceOver and the accessibility audit see, so it
+        // needs the text as its name (otherwise it's named by its class).
+        setAccessibilityLabel(text)
     }
 }
 
@@ -370,6 +373,7 @@ private final class MenuCell: NSTableCellView {
         }
         if let selected { popUp.selectItem(withTag: selected) }
         popUp.toolTip = popUp.selectedItem?.toolTip
+        setAccessibilityLabel("Match: \(popUp.titleOfSelectedItem ?? "none")")
         popUp.target = target
         popUp.action = action
     }
@@ -398,5 +402,8 @@ private final class IconCell: NSTableCellView {
         icon.contentTintColor = color
         icon.toolTip = help
         icon.setAccessibilityHelp(help)
+        // A cell with no icon has nothing to say, so VoiceOver skips it.
+        setAccessibilityElement(symbol != nil)
+        setAccessibilityLabel(label)
     }
 }

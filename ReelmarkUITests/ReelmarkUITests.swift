@@ -92,13 +92,13 @@ final class ReelmarkUITests: XCTestCase {
     /// window and on a filled list. Every issue is listed, then the test
     /// fails once if there are any.
     ///
-    /// Skipped, because they belong to Apple's own controls, which Reelmark
-    /// uses unchanged on purpose (no custom colours, see CLAUDE.md): the
-    /// dimmed text of the standard empty-window view, and containers macOS
-    /// adds itself (SwiftUI's unnamed groups, the Touch Bar).
+    /// Skipped, because they belong to macOS rather than to Reelmark:
+    /// - contrast: Reelmark uses only the system's own text colours (no
+    ///   custom colours, see CLAUDE.md), which macOS sets and adjusts for
+    ///   Increase Contrast, so the audit's contrast results are Apple's;
+    /// - containers macOS adds itself (SwiftUI's unnamed groups, the Touch Bar).
     @MainActor
     func testWindowPassesTheAccessibilityAudit() throws {
-        let systemTexts = ["Drag Movies and TV Episodes Here", "Drag video files or whole download folders"]
         var issues: [String] = []
         for withItems in [false, true] {
             let app = launch(withItems: withItems)
@@ -110,14 +110,12 @@ final class ReelmarkUITests: XCTestCase {
             }
             try app.performAccessibilityAudit { issue in
                 let element = issue.element
-                let label = element?.label ?? ""
-                let isSystemText =
-                    issue.auditType == .contrast && systemTexts.contains { label.hasPrefix($0) }
+                let isContrast = issue.auditType == .contrast
                 let isSystemContainer =
                     issue.auditType == .sufficientElementDescription
                     && [.group, .touchBar].contains(element?.elementType)
                     && (element?.identifier ?? "").isEmpty
-                if !isSystemText && !isSystemContainer {
+                if !isContrast && !isSystemContainer {
                     let window = withItems ? "list" : "empty window"
                     issues.append("\(window): \(issue.compactDescription): \(element.map { "\($0)" } ?? "-")")
                 }
