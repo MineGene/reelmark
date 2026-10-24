@@ -16,15 +16,68 @@ struct ContentView: View {
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
 
+    // The window is built in a few small pieces rather than one long chain
+    // of modifiers: Xcode 26's type checker, which the code scan builds
+    // with, gave up on the single expression.
+
     var body: some View {
-        @Bindable var model = model
         // Filtered once per redraw: a list can hold 100,000 items.
         let shown = shownItems
+        windowContent(shown)
+            // Forget selected rows once they're gone from the list, or hidden
+            // by the search, so menu commands never act on rows that can't be
+            // seen.
+            .onChange(of: model.items.count) { forgetHiddenSelection() }
+            .onChange(of: searchText) { forgetHiddenSelection() }
+            // Select the first of newly added files, as Finder does with
+            // pasted ones (the list scrolls to it), unless the search hides it.
+            .onChange(of: model.firstAdded) { selectFirstAdded() }
+            .sheet(isPresented: isShowingReport) {
+                if let kind = model.report { ReportView(kind: kind, model: model) }
+            }
+            .alert("Search The Movie Database", isPresented: isSearchingAgain) {
+                TextField("Title", text: $searchTitle)
+                Button("Search") {
+                    if let id = searchingFor { model.search(searchTitle, for: id) }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Type the movie or show's name as it's usually written.")
+            }
+    }
+
+    /// The list (or the empty window) with its toolbar, search field,
+    /// drop target and the menu bar's commands.
+    private func windowContent(_ shown: [LibraryModel.Item]) -> some View {
+        @Bindable var model = model
+        return listArea(shown)
+            .toolbar { toolbar }
+            .searchable(text: $searchText, placement: .toolbar, prompt: "Search")
+            .searchFocused($isSearchFocused)
+            .navigationSubtitle(itemCount(showing: shown.count))
+            // The menu bar's commands (see Commands.swift), offered only while
+            // no sheet is open.
+            .focusedSceneValue(\.listCommands, listCommands)
+            .dropDestination(for: URL.self) { urls, _ in
+                model.add(urls)
+                return true
+            }
+            .fileImporter(
+                isPresented: $model.isImporting, allowedContentTypes: [.folder, .item],
+                allowsMultipleSelection: true
+            ) { result in
+                if case .success(let urls) = result { model.add(urls) }
+            }
+    }
+
+    private func listArea(_ shown: [LibraryModel.Item]) -> some View {
         Group {
             if model.items.isEmpty {
                 EmptyState(model: model)
             } else {
-                ItemList(model: model, items: shown, selection: $selection, onSearch: searchAgain)
+                ItemList(
+                    model: model, items: shown, selection: $selection, reveal: model.firstAdded,
+                    onSearch: searchAgain)
                     .overlay {
                         if shown.isEmpty { ContentUnavailableView.search(text: searchText) }
                     }
@@ -36,54 +89,17 @@ struct ContentView: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dropArea")
-        .toolbar { toolbar }
-        .searchable(text: $searchText, placement: .toolbar, prompt: "Search")
-        .searchFocused($isSearchFocused)
-        .navigationSubtitle(itemCount(showing: shown.count))
-        // The menu bar's commands (see Commands.swift), offered only while no
-        // sheet is open.
-        .focusedSceneValue(
-            \.listCommands,
-            searchingFor == nil
-                ? ListCommands(
-                    model: model, selection: selection, fileReady: fileReady,
-                    searchAgain: searchAgain, find: { isSearchFocused = true })
-                : nil)
-        // Forget selected rows once they're gone from the list, or hidden by
-        // the search, so menu commands never act on rows that can't be seen.
-        .onChange(of: model.items.count) {
-            selection.formIntersection(shownItems.map(\.id))
-        }
-        .onChange(of: searchText) {
-            selection.formIntersection(shownItems.map(\.id))
-        }
-        .dropDestination(for: URL.self) { urls, _ in
-            model.add(urls)
-            return true
-        }
-        .fileImporter(
-            isPresented: $model.isImporting, allowedContentTypes: [.folder, .item],
-            allowsMultipleSelection: true
-        ) { result in
-            if case .success(let urls) = result { model.add(urls) }
-        }
-        .sheet(
-            isPresented: Binding(get: { model.report != nil }, set: { if !$0 { model.report = nil } })
-        ) {
-            if let kind = model.report { ReportView(kind: kind, model: model) }
-        }
-        .alert(
-            "Search The Movie Database",
-            isPresented: Binding(get: { searchingFor != nil }, set: { if !$0 { searchingFor = nil } })
-        ) {
-            TextField("Title", text: $searchTitle)
-            Button("Search") {
-                if let id = searchingFor { model.search(searchTitle, for: id) }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Type the movie or show's name as it's usually written.")
-        }
+    }
+
+    private var listCommands: ListCommands? {
+        guard searchingFor == nil else { return nil }
+        return ListCommands(
+            model: model, selection: selection, fileReady: fileReady,
+            searchAgain: searchAgain, find: { isSearchFocused = true })
+    }
+
+    private func forgetHiddenSelection() {
+        selection.formIntersection(shownItems.map(\.id))
     }
 
     @ToolbarContentBuilder
@@ -141,6 +157,19 @@ struct ContentView: View {
             }
             await model.renameReady(undoManager: undoManager)
         }
+    }
+
+    private var isShowingReport: Binding<Bool> {
+        Binding(get: { model.report != nil }, set: { if !$0 { model.report = nil } })
+    }
+
+    private var isSearchingAgain: Binding<Bool> {
+        Binding(get: { searchingFor != nil }, set: { if !$0 { searchingFor = nil } })
+    }
+
+    private func selectFirstAdded() {
+        guard let id = model.firstAdded, shownItems.contains(where: { $0.id == id }) else { return }
+        selection = [id]
     }
 
     /// Opens the Search Again sheet for one item, filled in with its title.
