@@ -149,7 +149,7 @@ jobs:
              \`\`\`
 
              Needed once per version. Rather not use Terminal? Open Reelmark, then go to **System Settings › Privacy & Security**, scroll down, click **Open Anyway** and confirm.
-          3. First time only: open **Reelmark › Settings** and choose your Jellyfin Movies and Shows folders. There's no account to create: Reelmark comes with its own TMDB access token.
+          3. There's nothing to set up: the first time you copy, Reelmark asks for your Jellyfin Movies or Shows folder, and it comes with its own TMDB access token.
 
           Only download Reelmark from this Releases page.
 

@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import ReelmarkCore
 
@@ -31,6 +32,27 @@ enum LibraryFolders {
         let data = try url.bookmarkData(
             options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
         UserDefaults.standard.set(data, forKey: key(kind))
+    }
+
+    /// Asks for a library folder with the standard open panel, as a sheet
+    /// on `window` when there is one. The panel is what grants the sandbox
+    /// access to the folder. Returns nil if the person cancels.
+    @MainActor
+    static func choose(_ kind: Match.Kind, attachedTo window: NSWindow?) async -> URL? {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Choose"
+        panel.message = "Choose your Jellyfin \(kind == .movie ? "Movies" : "Shows") library folder."
+        let response: NSApplication.ModalResponse
+        if let window {
+            response = await panel.beginSheetModal(for: window)
+        } else {
+            response = panel.runModal()
+        }
+        return response == .OK ? panel.url : nil
     }
 
     private static func key(_ kind: Match.Kind) -> String {
