@@ -1,9 +1,11 @@
 name: Release
 
 # Releases happen by themselves: as soon as a change to the app is merged
-# into main, this builds, tests and publishes the next patch version
-# (0.1.0, 0.1.1, …) as a pre-release, then a fresh machine downloads and
-# rebuilds it to verify it. Changes to docs, tests or CI alone don't make
+# into main, this builds, tests and publishes the next version as a
+# pre-release: the next minor version (0.2.0) when its changelog entries
+# add or change features, otherwise the next patch version (0.1.1). See
+# scripts/next-version.sh. Then a fresh machine downloads and rebuilds
+# it to verify it. Changes to docs, tests or CI alone don't make
 # a release. Pre-releases become the stable release once they've been
 # checked on a Mac: see promote.yml.
 #
@@ -12,8 +14,8 @@ name: Release
 # run (about 2:40 am in Queensland) also checks main and catches anything
 # that slipped through.
 #
-# For a bigger version number: Actions tab › Release › Run workflow (works
-# from a phone), optionally with a version like 0.2.0.
+# For a different version number (such as 1.0.0): Actions tab › Release ›
+# Run workflow (works from a phone), with the version.
 on:
   push:
     branches: [main]
@@ -30,7 +32,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release, e.g. 0.2.0 (blank = next patch version)"
+        description: "Version to release, e.g. 1.0.0 (blank = chosen from the changelog entries)"
         required: false
         type: string
 
