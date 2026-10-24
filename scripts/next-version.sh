@@ -50,7 +50,12 @@ if grep -qE "$app" <<<"$changed"; then
     | grep -E '^changelog\.d/[^/]+\.md$' | grep -v '^changelog\.d/README\.md$' || true)
   feature=false
   for f in $entries; do
-    if git show "HEAD:$f" | grep -qE '^### (Added|Changed|Deprecated|Removed)[[:space:]]*$'; then
+    # A feature group counts only if it holds an entry. awk reads all of
+    # its input, so git show never fails on a closed pipe.
+    found=$(git show "HEAD:$f" | awk '
+      /^### / { inside = ($0 ~ /^### (Added|Changed|Deprecated|Removed)[[:space:]]*$/); next }
+      inside && NF { print "yes" }')
+    if [ -n "$found" ]; then
       feature=true
     fi
   done
