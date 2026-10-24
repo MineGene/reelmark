@@ -95,8 +95,10 @@ final class ReelmarkUITests: XCTestCase {
         let app = launch()
         waitForItems(Self.all, in: app)
         let window = app.windows.firstMatch
+        // On macOS 26 and later the resize area sits just outside the
+        // rounded corner, so the drag starts a few points beyond it.
         let corner = window.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 1))
-            .withOffset(CGVector(dx: -2, dy: -2))
+            .withOffset(CGVector(dx: 3, dy: 3))
         corner.press(forDuration: 0.5, thenDragTo: corner.withOffset(CGVector(dx: -900, dy: -700)))
         XCTAssertTrue(
             eventually { window.frame.width <= 735 && window.frame.height <= 478 },
