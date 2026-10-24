@@ -22,11 +22,21 @@ Reelmark is a native macOS app (Swift, SwiftUI) that renames downloaded movies a
 - Settled decisions, not to be raised again: Reelmark has one admin (the maintainer) and no paid Apple developer account, so no Developer ID signing or notarisation. Reported content is a feature of organization-owned repositories only, so conduct reports use the private reporting form.
 - Where a platform standard exists (Apple's Human Interface Guidelines, macOS conventions, GitHub norms), pick it and do it, mentioning the choice in one line. Still ask before anything irreversible or outward-facing, such as secrets or account and repository settings.
 
+## Writing commits and pull requests
+
+Commits and pull requests are a permanent record for people reading the history later, not a report of the session. Follow Git's own [SubmittingPatches](https://git-scm.com/docs/SubmittingPatches) and the Linux kernel's [Submitting patches](https://www.kernel.org/doc/html/latest/process/submitting-patches.html) for commits, and Google's [Writing good CL descriptions](https://google.github.io/eng-practices/review/developer/cl-descriptions.html) for pull requests. No Conventional Commits prefixes.
+
+- **Subject:** imperative mood, completing "If applied, this commit will…" ("Add Redo to Copy and Move to Library"). About 50 characters, at most 72; capitalised; no full stop.
+- **Body:** after a blank line, wrapped at 72 characters. Describe the problem first, then what the change does about it and why this way. It must make sense to someone who never saw the conversation.
+- **Neutral voice:** no "you", "I", "we", "the user asked", "the maintainer picked" or narration of the session. State the reason itself: "Copies had no way back" rather than "The maintainer asked for undo".
+- **Pull request description:** use the template's sections (Summary, Motivation, Changes, Testing, Check on a Mac). Link the issue it fixes ("Fixes #12"). Testing says what CI covers; Check on a Mac lists, as `- [ ]` checkboxes, what only a person on a Mac can verify.
+- **Title:** the same rules as a commit subject; it becomes the squash commit's subject.
+
 ## Building and testing
 
 - There is no Xcode here. GitHub Actions is the compiler and test runner: push, then read the check annotations (`scripts/annotate-errors.sh` turns errors into annotations with file and line).
 - Target: macOS 26 or later, Apple silicon only, built with the Xcode pinned in `.xcode-version` (27.x) on GitHub's `xcode-27` runner image. The minimum is 26, not 27, only so the CodeQL scan can run: it doesn't support Xcode 27 yet, so it builds with Xcode 26.6 on `macos-26`. Keep code compatible with macOS 26; guard anything newer with `if #available(macOS 27, *)`.
-- Core logic lives in `Packages/ReelmarkCore` with XCTest tests. Add tests for every behaviour change. Tests use invented release names and empty placeholder files, never real media or the network.
+- Core logic lives in `Packages/ReelmarkCore` with XCTest tests. Add tests for every behaviour change, and for every bug fixed a regression test that fails without the fix. When something can't be tested in CI (it needs a real drag from Finder, chosen library folders or a person's eyes), say so in the pull request's Testing section and list what to check by hand on a Mac. Tests use invented release names and empty placeholder files, never real media or the network.
 - UI tests in `ReelmarkUITests/` launch a Debug build with `-ui-testing`, which fills the list with made-up items (`LibraryModel.forLaunch`, Debug only) and uses the window like a person would. Add one for every window change, especially anything that removes or changes rows.
   - Pass test settings such as a list size through the launch environment (`REELMARK_UI_TEST_ITEMS`), never as launch arguments: macOS reads a bare number as a file to open, and the window never appears.
   - XCUITest calls table headers not hittable: click them by coordinate, and pause a second between two clicks.
