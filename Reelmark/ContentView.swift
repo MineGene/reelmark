@@ -58,9 +58,7 @@ struct ContentView: View {
         }
         // Select the first of newly added files, as Finder does with pasted
         // ones (the list scrolls to it), unless the search hides it.
-        .onChange(of: model.firstAdded) {
-            if let id = model.firstAdded, shownItems.contains(where: { $0.id == id }) { selection = [id] }
-        }
+        .onChange(of: model.firstAdded) { selectFirstAdded() }
         .onChange(of: searchText) {
             selection.formIntersection(shownItems.map(\.id))
         }
@@ -75,13 +73,13 @@ struct ContentView: View {
             if case .success(let urls) = result { model.add(urls) }
         }
         .sheet(
-            isPresented: Binding(get: { model.report != nil }, set: { if !$0 { model.report = nil } })
+            isPresented: isShowingReport
         ) {
             if let kind = model.report { ReportView(kind: kind, model: model) }
         }
         .alert(
             "Search The Movie Database",
-            isPresented: Binding(get: { searchingFor != nil }, set: { if !$0 { searchingFor = nil } })
+            isPresented: isSearchingAgain
         ) {
             TextField("Title", text: $searchTitle)
             Button("Search") {
@@ -142,6 +140,23 @@ struct ContentView: View {
             }
             await model.renameReady(undoManager: undoManager)
         }
+    }
+
+    // The body is split into these small pieces because Xcode 26's type
+    // checker, which the code scan builds with, gave up on it as one
+    // expression.
+
+    private var isShowingReport: Binding<Bool> {
+        Binding(get: { model.report != nil }, set: { if !$0 { model.report = nil } })
+    }
+
+    private var isSearchingAgain: Binding<Bool> {
+        Binding(get: { searchingFor != nil }, set: { if !$0 { searchingFor = nil } })
+    }
+
+    private func selectFirstAdded() {
+        guard let id = model.firstAdded, shownItems.contains(where: { $0.id == id }) else { return }
+        selection = [id]
     }
 
     /// Opens the Search Again sheet for one item, filled in with its title.
