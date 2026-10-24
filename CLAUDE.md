@@ -17,6 +17,7 @@ Reelmark is a native macOS app (Swift, SwiftUI) that renames downloaded movies a
 ## Working with the maintainer
 
 - Work happens in Claude Code cloud sessions; the maintainer keeps no clone or tools on their Mac. Anything that needs a Mac (installing a build, Activity Monitor, crash logs, trying a change) is theirs to do: ask them, say exactly what to check, and wait for the result.
+- Settled decisions, not to be raised again: Reelmark has one admin (the maintainer) and no paid Apple developer account, so no Developer ID signing or notarisation. Reported content is a feature of organization-owned repositories only, so conduct reports use the private reporting form.
 - Where a platform standard exists (Apple's Human Interface Guidelines, macOS conventions, GitHub norms), pick it and do it, mentioning the choice in one line. Still ask before anything irreversible or outward-facing, such as secrets or account and repository settings.
 
 ## Building and testing
