@@ -27,7 +27,7 @@ So some ideas, however good, won't fit, and the maintainer will say so kindly an
 
 ## Who decides
 
-Reelmark has one maintainer, who sets its direction, tests on a real Mac and approves releases. Most code is written by Claude through Claude Code, openly. Decisions and their reasons are written down in issues and pull requests, so anyone can follow them. The maintainer aims to reply to new issues and pull requests within a week.
+Reelmark has one maintainer, who sets its direction, tests on a real Mac and approves releases. Most code is written by Claude through Claude Code, openly; its commits are authored by [MachineGene](https://github.com/MachineGene), an account kept for that work. Decisions and their reasons are written down in issues and pull requests, so anyone can follow them. The maintainer aims to reply to new issues and pull requests within a week.
 
 ## Privacy rules
 
