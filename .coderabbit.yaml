@@ -15,9 +15,10 @@ tone_instructions: >-
 
 reviews:
   profile: chill
-  # Auto-merge waits on the required checks, not on reviews; a request for
-  # changes would only add noise.
-  request_changes_workflow: false
+  # Auto-merge waits on the required checks, not on reviews, and approval
+  # stays a person's: CodeRabbit neither approves nor requests changes.
+  auto_approvals:
+    enabled: false
   high_level_summary: true
   review_status: true
   collapse_walkthrough: true
@@ -99,6 +100,9 @@ reviews:
       enabled: false
     resolve_merge_conflict:
       enabled: false
+    custom: []
+  # No follow-up actions (or pull requests) after a merge.
+  post_merge_actions: []
   tools:
     # The code is formatted with swift-format, whose rules differ from
     # SwiftLint's defaults, so SwiftLint would only report style clashes.
