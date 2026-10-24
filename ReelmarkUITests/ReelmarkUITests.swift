@@ -97,7 +97,8 @@ final class ReelmarkUITests: XCTestCase {
     /// - contrast: Reelmark uses only the system's own text colours (no
     ///   custom colours, see CLAUDE.md), which macOS sets and adjusts for
     ///   Increase Contrast, so the audit's contrast results are Apple's;
-    /// - containers macOS adds itself (SwiftUI's unnamed groups, the Touch Bar).
+    /// - containers macOS adds itself (SwiftUI's unnamed groups, the Touch Bar)
+    ///   and the hover help tag macOS draws for a tooltip.
     @MainActor
     func testWindowPassesTheAccessibilityAudit() throws {
         var issues: [String] = []
@@ -114,7 +115,7 @@ final class ReelmarkUITests: XCTestCase {
                 let isContrast = issue.auditType == .contrast
                 let isSystemContainer =
                     issue.auditType == .sufficientElementDescription
-                    && [.group, .touchBar].contains(element?.elementType)
+                    && [.group, .touchBar, .helpTag].contains(element?.elementType)
                     && (element?.identifier ?? "").isEmpty
                 if !isContrast && !isSystemContainer {
                     let window = withItems ? "list" : "empty window"

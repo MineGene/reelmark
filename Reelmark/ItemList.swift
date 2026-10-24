@@ -340,7 +340,9 @@ private final class LabelCell: NSTableCellView {
         field.toolTip = help
         // The cell is what VoiceOver and the accessibility audit see, so it
         // needs the text as its name (otherwise it's named by its class).
+        // An empty cell, such as no new name yet, has nothing to say.
         setAccessibilityLabel(text)
+        setAccessibilityElement(!text.isEmpty)
     }
 }
 
@@ -386,6 +388,10 @@ private final class IconCell: NSTableCellView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         icon.translatesAutoresizingMaskIntoConstraints = false
+        // The cell speaks for the icon (as an image, named by its label), so
+        // VoiceOver doesn't find the same icon twice.
+        icon.setAccessibilityElement(false)
+        setAccessibilityRole(.image)
         addSubview(icon)
         NSLayoutConstraint.activate([
             icon.centerXAnchor.constraint(equalTo: centerXAnchor),
@@ -401,7 +407,7 @@ private final class IconCell: NSTableCellView {
         icon.isHidden = symbol == nil
         icon.contentTintColor = color
         icon.toolTip = help
-        icon.setAccessibilityHelp(help)
+        setAccessibilityHelp(help)
         // A cell with no icon has nothing to say, so VoiceOver skips it.
         setAccessibilityElement(symbol != nil)
         setAccessibilityLabel(label)
