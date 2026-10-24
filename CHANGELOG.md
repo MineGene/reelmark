@@ -8,6 +8,7 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 - Two actions for the Shortcuts app and Spotlight: **Add Files to Reelmark**, and **Add Matched Files to Library**, which waits for the matches and then files them.
 - **Help › Report a Bug…** and **Request a Feature…** show what would be shared, then open a pre-filled GitHub issue in your browser. Nothing is sent unless you submit it, and file names, folders and tokens are never included.
+- A search field in the toolbar (⌘F) narrows a long list to the files, matches or new names containing what you type.
 - Videos and download folders can be dropped on Reelmark's Dock icon, opened with Finder's **Open With › Reelmark**, or added with Finder's **Services › Add to Reelmark**. Right-clicking the Dock icon offers **Add Files…**.
 
 ### Changed
