@@ -59,7 +59,7 @@ swift test --package-path Packages/ReelmarkCore
 
 ## Trying the app by hand
 
-`scripts/make-test-downloads.sh` makes a folder of empty files named like downloads: free-to-show films for screenshots, and made-up names that try to break things (thousands of episodes, odd names, files that must be skipped, link loops). Reelmark only reads file names, so empty files behave exactly like real ones. Run it with `--help` for options.
+`scripts/make-test-downloads.sh` makes a folder of empty files named like downloads: free-to-show films for screenshots, and made-up names that try to break things (thousands of episodes, odd names, files that must be skipped, link loops). Reelmark only reads file names, so empty files behave exactly like real ones. `--count 100000` makes a data hoarder's folder, spread over up to 500 made-up shows so it still needs only a few hundred TMDB searches. Run it with `--help` for options.
 
 ## Rules the code must keep
 
