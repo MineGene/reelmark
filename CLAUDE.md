@@ -10,12 +10,14 @@ Reelmark is a native macOS app (Swift, SwiftUI) that renames downloaded movies a
 - Stage files by name (`git add path/to/file`). Never use `git add -A`, `git add .` or `git commit -a`, and switch branches only with a clean working tree (`git status --short` empty).
 - Run `scripts/check-commits.sh origin/main HEAD` before pushing.
 - One change per branch and pull request. Open the pull request yourself (not as a draft), then turn on squash auto-merge, so it merges by itself once every required check passes, and watch its CI through to the merge. Turn it on as the maintainer: `gh pr merge <number> --auto --squash`, or in a cloud session the GitHub connector's enable-auto-merge tool, which acts as the maintainer's account. Never turn it on from a workflow: GitHub doesn't start workflows from merges made by its own token, so CI on `main` and the release wouldn't run. Merged app changes are released straight away (see `.github/workflows/release.yml`), so keep `main` releasable. Required checks: Commit privacy, Core tests (xcode-27), Build and check app, UI tests, Analyze Swift, Reproducible build.
+- After every change, check whether the README, CONTRIBUTING.md, SECURITY.md, SUPPORT.md or this file need updating to match, and update them in the same pull request.
 - Once a pull request is merged or closed, delete its branch (remote and local) without asking. For a merged one, first check the branch tip matches the pull request's head.
 - Never push to `main` or force-push it; it is protected.
 
 ## Working with the maintainer
 
 - Work happens in Claude Code cloud sessions; the maintainer keeps no clone or tools on their Mac. Anything that needs a Mac (installing a build, Activity Monitor, crash logs, trying a change) is theirs to do: ask them, say exactly what to check, and wait for the result.
+- Settled decisions, not to be raised again: Reelmark has one admin (the maintainer) and no paid Apple developer account, so no Developer ID signing or notarisation. Reported content is a feature of organization-owned repositories only, so conduct reports use the private reporting form.
 - Where a platform standard exists (Apple's Human Interface Guidelines, macOS conventions, GitHub norms), pick it and do it, mentioning the choice in one line. Still ask before anything irreversible or outward-facing, such as secrets or account and repository settings.
 
 ## Building and testing
@@ -34,7 +36,7 @@ Reelmark is a native macOS app (Swift, SwiftUI) that renames downloaded movies a
 
 - **Privacy:** only a cleaned-up title and year (plus a TMDB access token) are sent, and only to `api.themoviedb.org`, over HTTPS, with an ephemeral session (no cache, cookies or credential storage). File names, paths and anything else about the user's files never leave the Mac and are never logged or written to disk. `scripts/check-app.sh` fails if any other web address appears in the app.
 - **Permissions:** sandboxed with exactly four entitlements (sandbox, outgoing network, user-selected read-write, app-scoped bookmarks). `scripts/check-app.sh` enforces the list.
-- **Never destroy data:** never overwrite an existing file; never delete anything. Moving is opt-in (Copy is the default).
+- **Never destroy data:** never overwrite an existing file; never delete anything. Moving is opt-in (Copy is the default). The one exception is Edit ▸ Undo, which works like Finder's: it sends copies Reelmark made to the Trash (only while the original still exists), never deletes them outright.
 - **Tokens:** Reelmark ships with its own read-only TMDB token (`TMDBKey.swift`). It is public on purpose: anything in an open-source app can be read out of it. A person's own token, if they add one in Settings, is used instead and lives only in the Keychain (`Keychain.swift`), never in preferences or files.
 - **Memory:** the app runs on an 8 GB MacBook Neo alongside Jellyfin. Keep it tiny: no artwork or images, no file contents read, one lookup at a time, results cached only for the session, the app quits when its window closes.
 - **Design:** standard SwiftUI and AppKit controls only, following Apple's Human Interface Guidelines, so the app picks up macOS's own look, light and dark mode and accessibility. No custom colours, fonts or chrome.

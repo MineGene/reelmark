@@ -80,10 +80,18 @@ public enum MediaFiles {
 
     public enum TransferError: LocalizedError, Equatable {
         case alreadyExists(String)
+        case notInLibrary(String)
+        case originalMissing(String)
+        case originalPlaceTaken(String)
 
         public var errorDescription: String? {
             switch self {
             case .alreadyExists(let name): "“\(name)” is already in your library."
+            case .notInLibrary(let name): "Couldn't undo: “\(name)” is no longer where Reelmark put it."
+            case .originalMissing(let name):
+                "Couldn't undo: the original of “\(name)” is gone, so the copy in your library was kept."
+            case .originalPlaceTaken(let name):
+                "Couldn't undo: something named “\(name)” is already where the file came from."
             }
         }
     }
@@ -91,10 +99,20 @@ public enum MediaFiles {
     /// Moves or copies `source` to `destination`, creating folders as
     /// needed. Never overwrites: if the destination exists, nothing changes.
     /// Runs on whatever thread calls it; large copies can take a while.
-    public static func transfer(_ source: URL, to destination: URL, mode: TransferMode) throws {
+    ///
+    /// Returns the outermost folder it had to create, if any (for example
+    /// "Film (2020)"), so an undo can tidy it away again.
+    @discardableResult
+    public static func transfer(_ source: URL, to destination: URL, mode: TransferMode) throws -> URL? {
         let manager = FileManager.default
         if manager.fileExists(atPath: destination.path) {
             throw TransferError.alreadyExists(destination.lastPathComponent)
+        }
+        var created: URL?
+        var folder = destination.deletingLastPathComponent()
+        while !manager.fileExists(atPath: folder.path), folder.pathComponents.count > 1 {
+            created = folder
+            folder = folder.deletingLastPathComponent()
         }
         try manager.createDirectory(
             at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -102,5 +120,45 @@ public enum MediaFiles {
         case .move: try manager.moveItem(at: source, to: destination)
         case .copy: try manager.copyItem(at: source, to: destination)
         }
+        return created
+    }
+
+    /// Reverses `transfer`, the way Finder's Edit ▸ Undo does: a moved file
+    /// goes back where it came from, and a copy goes to the Trash, where it
+    /// can still be recovered. Nothing is ever deleted outright.
+    ///
+    /// A copy is only trashed while its original still exists, so undo can
+    /// never leave the person with no copy at all. `createdFolder` (from
+    /// `transfer`) also goes to the Trash, but only once it's empty.
+    public static func undoTransfer(
+        _ source: URL, to destination: URL, mode: TransferMode, createdFolder: URL?
+    ) throws {
+        let manager = FileManager.default
+        let name = destination.lastPathComponent
+        guard manager.fileExists(atPath: destination.path) else { throw TransferError.notInLibrary(name) }
+        switch mode {
+        case .move:
+            if manager.fileExists(atPath: source.path) {
+                throw TransferError.originalPlaceTaken(source.lastPathComponent)
+            }
+            try manager.moveItem(at: destination, to: source)
+        case .copy:
+            guard manager.fileExists(atPath: source.path) else { throw TransferError.originalMissing(name) }
+            try manager.trashItem(at: destination, resultingItemURL: nil)
+        }
+        if let createdFolder { trashIfEmpty(createdFolder) }
+    }
+
+    /// Trashes `folder` if nothing but empty folders (like "Season 01") and
+    /// Finder's hidden .DS_Store files is inside it. Anything else keeps it.
+    private static func trashIfEmpty(_ folder: URL) {
+        let manager = FileManager.default
+        guard let contents = manager.enumerator(at: folder, includingPropertiesForKeys: [.isDirectoryKey])
+        else { return }
+        for case let url as URL in contents {
+            let isFolder = (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+            if !isFolder && url.lastPathComponent != ".DS_Store" { return }
+        }
+        try? manager.trashItem(at: folder, resultingItemURL: nil)
     }
 }
