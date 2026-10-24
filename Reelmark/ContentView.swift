@@ -22,6 +22,12 @@ struct ContentView: View {
                 }
             }
         }
+        // Fill the window, so a drop anywhere in it counts, not just on the
+        // empty state's text in the middle.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("dropArea")
         .toolbar { toolbar }
         .navigationSubtitle(itemCount)
         // Forget selected rows once they're gone from the list.

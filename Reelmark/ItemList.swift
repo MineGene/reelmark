@@ -35,6 +35,9 @@ struct ItemList: NSViewRepresentable {
         let menu = NSMenu()
         menu.delegate = context.coordinator
         table.menu = menu
+        // The table takes drops itself: SwiftUI's drop area around it doesn't
+        // reach over an AppKit view, so drops on the list were refused.
+        table.registerForDraggedTypes([.fileURL])
         context.coordinator.table = table
 
         let scroll = NSScrollView()
@@ -138,6 +141,31 @@ struct ItemList: NSViewRepresentable {
             guard let table else { return }
             parent.model.remove(
                 Set(table.selectedRowIndexes.compactMap { rows.indices.contains($0) ? rows[$0].id : nil }))
+        }
+
+        // MARK: Dropping files
+
+        /// Files dropped anywhere on the list are added, and the whole table
+        /// is highlighted while they're held over it, as in Finder.
+        func tableView(
+            _ tableView: NSTableView, validateDrop info: NSDraggingInfo, proposedRow row: Int,
+            proposedDropOperation dropOperation: NSTableView.DropOperation
+        ) -> NSDragOperation {
+            guard info.draggingSource == nil else { return [] }  // not a drag from within the app
+            tableView.setDropRow(-1, dropOperation: .on)
+            return .copy
+        }
+
+        func tableView(
+            _ tableView: NSTableView, acceptDrop info: NSDraggingInfo, row: Int,
+            dropOperation: NSTableView.DropOperation
+        ) -> Bool {
+            let urls =
+                info.draggingPasteboard.readObjects(
+                    forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
+            guard !urls.isEmpty else { return false }
+            parent.model.add(urls)
+            return true
         }
 
         // MARK: Cells
