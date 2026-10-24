@@ -1,6 +1,33 @@
 # Contributing
 
-Thanks for helping. Reelmark handles people's media libraries and sends data to an online service, so privacy and safety come first.
+Thanks for thinking about helping with Reelmark. Every bug report, idea and fix makes it better for everyone who keeps a Jellyfin library on a Mac.
+
+Reelmark handles people's media libraries and sends data to an online service, so privacy and safety come first. Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Ways to help
+
+- **Report a bug:** use the [bug report form](https://github.com/MineGene/reelmark/issues/new?template=bug.yml). For a file Reelmark matched wrongly, a made-up name in the same style is enough.
+- **Suggest a feature:** use the [feature request form](https://github.com/MineGene/reelmark/issues/new?template=feature.yml), or talk an idea through first in [Discussions](https://github.com/MineGene/reelmark/discussions).
+- **Try new releases** on your own Mac and say what you find. Different Macs, macOS versions and library layouts all help.
+- **Improve the docs:** the README, this guide and the in-app text should be clear to someone who has never used a terminal.
+- **Fix something:** issues labelled [good first issue](https://github.com/MineGene/reelmark/labels/good%20first%20issue) or [help wanted](https://github.com/MineGene/reelmark/labels/help%20wanted) are good places to start.
+
+Questions go in [Discussions](https://github.com/MineGene/reelmark/discussions); see [SUPPORT.md](SUPPORT.md).
+
+## What Reelmark is, and isn't
+
+Reelmark does one job: it names movies and TV episodes the way Jellyfin expects and files them into a library, privately and without fuss. It aims to feel like a part of macOS.
+
+So some ideas, however good, won't fit, and the maintainer will say so kindly and explain why:
+
+- Anything that sends more than a title and year off the Mac, or talks to any service but TMDB.
+- Downloading artwork, subtitles or metadata files, which Jellyfin already does.
+- Other media servers' naming schemes, music, or books.
+- Third-party code, custom-styled controls, or features that keep Reelmark running in the background.
+
+## Who decides
+
+Reelmark has one maintainer, who sets its direction, tests on a real Mac and approves releases. Most code is written by Claude through Claude Code, openly. Decisions and their reasons are written down in issues and pull requests, so anyone can follow them. The maintainer aims to reply to new issues and pull requests within a week.
 
 ## Privacy rules
 

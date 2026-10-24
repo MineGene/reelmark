@@ -10,12 +10,14 @@ Reelmark is a native macOS app (Swift, SwiftUI) that renames downloaded movies a
 - Stage files by name (`git add path/to/file`). Never use `git add -A`, `git add .` or `git commit -a`, and switch branches only with a clean working tree (`git status --short` empty).
 - Run `scripts/check-commits.sh origin/main HEAD` before pushing.
 - One change per branch and pull request. Open the pull request yourself (not as a draft), then turn on squash auto-merge, so it merges by itself once every required check passes, and watch its CI through to the merge. Turn it on as the maintainer: `gh pr merge <number> --auto --squash`, or in a cloud session the GitHub connector's enable-auto-merge tool, which acts as the maintainer's account. Never turn it on from a workflow: GitHub doesn't start workflows from merges made by its own token, so CI on `main` and the release wouldn't run. Merged app changes are released straight away (see `.github/workflows/release.yml`), so keep `main` releasable. Required checks: Commit privacy, Core tests (xcode-27), Build and check app, UI tests, Analyze Swift, Reproducible build.
+- After every change, check whether the README, CONTRIBUTING.md, SECURITY.md, SUPPORT.md or this file need updating to match, and update them in the same pull request.
 - Once a pull request is merged or closed, delete its branch (remote and local) without asking. For a merged one, first check the branch tip matches the pull request's head.
 - Never push to `main` or force-push it; it is protected.
 
 ## Working with the maintainer
 
 - Work happens in Claude Code cloud sessions; the maintainer keeps no clone or tools on their Mac. Anything that needs a Mac (installing a build, Activity Monitor, crash logs, trying a change) is theirs to do: ask them, say exactly what to check, and wait for the result.
+- Settled decisions, not to be raised again: Reelmark has one admin (the maintainer) and no paid Apple developer account, so no Developer ID signing or notarisation. Reported content is a feature of organization-owned repositories only, so conduct reports use the private reporting form.
 - Where a platform standard exists (Apple's Human Interface Guidelines, macOS conventions, GitHub norms), pick it and do it, mentioning the choice in one line. Still ask before anything irreversible or outward-facing, such as secrets or account and repository settings.
 
 ## Building and testing
