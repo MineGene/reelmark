@@ -4,6 +4,10 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 ## [Unreleased]
 
+### Added
+
+- Two actions for the Shortcuts app and Spotlight: **Add Files to Reelmark**, and **Add Matched Files to Library**, which waits for the matches and then files them.
+
 ### Changed
 
 - Matching a long list of different titles is about four times faster: up to four lookups run at once, files with the same title share one lookup, and when The Movie Database is busy Reelmark waits as long as it asks.

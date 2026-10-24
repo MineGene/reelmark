@@ -16,9 +16,13 @@
 #                collide in the library, deep nesting, a folder linked back
 #                into itself, broken links and the same file reached twice.
 #
-# Usage: scripts/make-test-downloads.sh [folder] [--count N]
+# Usage: scripts/make-test-downloads.sh [folder] [--count N] [--shows N]
 #   folder     where to create it (default: ~/Desktop/Reelmark Test Downloads)
-#   --count N  how many made-up episodes to add to Stress/ (default 500)
+#   --count N  how many made-up episodes to add to Stress/Volume/
+#              (default 500; try 10000 or 100000 for a data hoarder's folder)
+#   --shows N  how many made-up shows they're spread across (default: one
+#              per 100 episodes, 1 to 500). Each show is one TMDB search,
+#              so even 100,000 episodes stay polite to TMDB.
 #
 # It refuses to touch a folder that already exists, so it can never
 # overwrite anything. Delete the folder when you're done with it.
@@ -26,14 +30,18 @@ set -euo pipefail
 
 folder="$HOME/Desktop/Reelmark Test Downloads"
 count=500
+shows=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --count) count="${2:?--count needs a number}"; shift 2 ;;
-    -h | --help) sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --shows) shows="${2:?--shows needs a number}"; shift 2 ;;
+    -h | --help) sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) folder="$1"; shift ;;
   esac
 done
 case "$count" in '' | *[!0-9]*) echo "--count must be a whole number" >&2; exit 1 ;; esac
+[ -n "$shows" ] || shows=$(( count / 100 < 1 ? 1 : (count / 100 > 500 ? 500 : count / 100) ))
+case "$shows" in '' | 0 | *[!0-9]*) echo "--shows must be a whole number above 0" >&2; exit 1 ;; esac
 
 if [ -e "$folder" ]; then
   echo "$folder already exists. Choose another folder, or delete that one first." >&2
@@ -76,14 +84,31 @@ make "Screenshot/Carnival.of.Souls.1962.1080p.BluRay.mkv"
 
 # --- Stress: made-up names that try to break things ------------------------
 
-# Many episodes, 50 to a season folder.
-i=1
-while [ "$i" -le "$count" ]; do
-  season=$(( (i - 1) / 50 + 1 ))
-  episode=$(( (i - 1) % 50 + 1 ))
-  name=$(printf "Made.Up.Show.S%02dE%02d.1080p.WEB.h264-GROUP.mkv" "$season" "$episode")
-  make "Stress/Made Up Show/Made.Up.Show.S$(printf %02d "$season").1080p/$name"
-  i=$((i + 1))
+# Volume: many episodes spread across many made-up shows, 20 to a season
+# folder, as a big downloads folder would have them. Files are created a
+# folder at a time, so 100,000 take seconds rather than minutes.
+per_show=$(( (count + shows - 1) / shows ))
+made=0
+show=1
+while [ "$made" -lt "$count" ]; do
+  title=$(printf "Made.Up.Show.%03d" "$show")
+  episode=1
+  while [ "$episode" -le "$per_show" ] && [ "$made" -lt "$count" ]; do
+    season=$(( (episode - 1) / 20 + 1 ))
+    dir="$folder/Stress/Volume/$title/$title.S$(printf %02d "$season").1080p"
+    mkdir -p "$dir"
+    # This season's episodes, up to 20.
+    last=$(( season * 20 < per_show ? season * 20 : per_show ))
+    names=()
+    while [ "$episode" -le "$last" ] && [ "$made" -lt "$count" ]; do
+      names+=("$dir/$(printf "%s.S%02dE%02d.1080p.WEB.h264-GROUP.mkv" "$title" "$season" \
+        $(( (episode - 1) % 20 + 1 )))")
+      episode=$((episode + 1))
+      made=$((made + 1))
+    done
+    touch "${names[@]}"
+  done
+  show=$((show + 1))
 done
 
 # Episode layouts: multi-episode files, and season folders.

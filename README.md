@@ -36,7 +36,7 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 
 ## Install
 
-1. Download the DMG from the [latest release](https://github.com/MineGene/reelmark/releases/latest), open it and drag Reelmark to Applications.
+1. Download the DMG from the [latest release](https://github.com/MineGene/reelmark/releases/latest), open it and drag Reelmark to Applications. (Newer versions marked *Pre-release* on the Releases page haven't been checked on a Mac yet; the latest release has.)
 2. Reelmark is free and isn't notarised by Apple (that needs a paid developer account), so macOS blocks it until you say you trust this copy. Open **Terminal**, run this once, then open Reelmark as usual:
 
    ```sh
@@ -68,6 +68,15 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 | ⌘, | Settings |
 
 They're all in the File menu too, and right-clicking an item offers Search Again…, Show in Finder and Remove from List.
+
+### Shortcuts and Spotlight
+
+Reelmark adds two actions to the Shortcuts app, which Spotlight can run too:
+
+- **Add Files to Reelmark:** adds video files or download folders, as dragging them in does. Use it in a Finder Quick Action, or a Folder Action on your downloads folder.
+- **Add Matched Files to Library:** waits for the matches, then copies or moves every matched file, as the Copy to Library button does.
+
+They run inside Reelmark, so nothing more leaves your Mac than when you use the window.
 
 ## Privacy
 
