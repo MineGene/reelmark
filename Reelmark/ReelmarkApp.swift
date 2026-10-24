@@ -10,7 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct ReelmarkApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @State private var model = LibraryModel.forLaunch()
+    @State private var model = LibraryModel.shared
 
     init() {
         // Lets macOS keep crash and hang summaries for bug reports.

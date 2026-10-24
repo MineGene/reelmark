@@ -6,6 +6,7 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 ### Added
 
+- Two actions for the Shortcuts app and Spotlight: **Add Files to Reelmark**, and **Add Matched Files to Library**, which waits for the matches and then files them.
 - **Help › Report a Bug…** and **Request a Feature…** show what would be shared, then open a pre-filled GitHub issue in your browser. Nothing is sent unless you submit it, and file names, folders and tokens are never included.
 
 ## [0.1.9] - 2026-10-24
