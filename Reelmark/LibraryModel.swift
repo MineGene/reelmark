@@ -289,15 +289,37 @@ final class LibraryModel {
         let createdFolder: URL?
     }
 
+    /// One Copy or Move to Library, which Edit ▸ Undo reverses and Edit ▸
+    /// Redo repeats. A class, so a redo can record the folders it creates
+    /// for the next undo.
+    @MainActor
+    final class Batch {
+        let mode: MediaFiles.TransferMode
+        var transfers: [Transfer]
+
+        init(mode: MediaFiles.TransferMode, transfers: [Transfer]) {
+            self.mode = mode
+            self.transfers = transfers
+        }
+
+        var actionName: String { mode == .copy ? "Copy to Library" : "Move to Library" }
+    }
+
     /// Moves or copies every matched file into its library folder. The whole
-    /// batch can then be reversed with Edit ▸ Undo (Command-Z), as in Finder.
+    /// batch can then be reversed with Edit ▸ Undo (Command-Z) and repeated
+    /// with Edit ▸ Redo (Shift-Command-Z), as in Finder.
     func renameReady(undoManager: UndoManager?) async {
         guard !isRenaming else { return }
         isRenaming = true
         defer { isRenaming = false }
         let mode = self.mode
         var done: [Transfer] = []
-        defer { registerUndo(of: done, mode: mode, with: undoManager) }
+        defer {
+            if let undoManager, !done.isEmpty {
+                self.undoManager = undoManager
+                registerUndo(of: Batch(mode: mode, transfers: done))
+            }
+        }
 
         for id in items.filter({ $0.status == .ready }).map(\.id) {
             guard let index = index(of: id),
@@ -312,51 +334,76 @@ final class LibraryModel {
 
             let source = items[index].source
             let destination = library.appending(path: path)
-            let hasAccess = library.startAccessingSecurityScopedResource()
-            // Off the main thread: a copy to another drive can take minutes.
-            let result = await Task.detached { () -> Result<URL?, Error> in
-                Result { try MediaFiles.transfer(source, to: destination, mode: mode) }
-            }.value
-            if hasAccess { library.stopAccessingSecurityScopedResource() }
-
-            if case .success(let created) = result {
+            if let created = await transfer(id: id, source, to: destination, in: library, mode: mode) {
                 done.append(
                     Transfer(
                         id: id, source: source, destination: destination, library: library,
-                        createdFolder: created))
-            }
-            if let current = self.index(of: id) {
-                switch result {
-                case .success: items[current].status = .done
-                case .failure(let error): items[current].status = .failed(error.localizedDescription)
-                }
+                        createdFolder: created.createdFolder))
             }
         }
     }
 
-    private func registerUndo(
-        of transfers: [Transfer], mode: MediaFiles.TransferMode, with undoManager: UndoManager?
-    ) {
-        guard let undoManager, !transfers.isEmpty else { return }
-        self.undoManager = undoManager
-        undoManager.registerUndo(withTarget: self) { model in
-            MainActor.assumeIsolated {
-                Task { await model.undo(transfers, mode: mode) }
+    /// Moves or copies one file and updates its row. Returns nil if it
+    /// failed, otherwise the outermost folder it created (if any).
+    private func transfer(
+        id: Item.ID, _ source: URL, to destination: URL, in library: URL, mode: MediaFiles.TransferMode
+    ) async -> Filed? {
+        let hasAccess = library.startAccessingSecurityScopedResource()
+        // Off the main thread: a copy to another drive can take minutes.
+        let result = await Task.detached { () -> Result<URL?, Error> in
+            Result { try MediaFiles.transfer(source, to: destination, mode: mode) }
+        }.value
+        if hasAccess { library.stopAccessingSecurityScopedResource() }
+
+        if let current = index(of: id) {
+            switch result {
+            case .success: items[current].status = .done
+            case .failure(let error): items[current].status = .failed(error.localizedDescription)
             }
         }
-        undoManager.setActionName(mode == .copy ? "Copy to Library" : "Move to Library")
+        guard case .success(let created) = result else { return nil }
+        return Filed(createdFolder: created)
+    }
+
+    private struct Filed {
+        let createdFolder: URL?
+    }
+
+    // Undo and redo. Each handler registers its opposite straight away (that's
+    // how UndoManager tells an undo from a redo), then does the file work in
+    // a task, since moving files back from another drive can take a while.
+
+    private func registerUndo(of batch: Batch) {
+        undoManager?.registerUndo(withTarget: self) { model in
+            MainActor.assumeIsolated { model.undo(batch) }
+        }
+        undoManager?.setActionName(batch.actionName)
+    }
+
+    private func undo(_ batch: Batch) {
+        undoManager?.registerUndo(withTarget: self) { model in
+            MainActor.assumeIsolated { model.redo(batch) }
+        }
+        undoManager?.setActionName(batch.actionName)
+        Task { await reverse(batch) }
+    }
+
+    private func redo(_ batch: Batch) {
+        registerUndo(of: batch)
+        Task { await repeatTransfers(batch) }
     }
 
     /// Reverses a Copy or Move to Library, newest file first so folders
     /// Reelmark created are empty again by the time they're checked. Moved
     /// files go back where they were; copies go to the Trash. Items still in
     /// the list are ready to file again.
-    private func undo(_ transfers: [Transfer], mode: MediaFiles.TransferMode) async {
+    private func reverse(_ batch: Batch) async {
         guard !isRenaming else { return }
         isRenaming = true
         defer { isRenaming = false }
 
-        for transfer in transfers.reversed() {
+        let mode = batch.mode
+        for transfer in batch.transfers.reversed() {
             let hasAccess = transfer.library.startAccessingSecurityScopedResource()
             let result = await Task.detached { () -> Result<Void, Error> in
                 Result {
@@ -374,6 +421,27 @@ final class LibraryModel {
                 }
             }
         }
+    }
+
+    /// Files the same files again, to the same places. Only the ones that
+    /// succeed are kept for the next undo.
+    private func repeatTransfers(_ batch: Batch) async {
+        guard !isRenaming else { return }
+        isRenaming = true
+        defer { isRenaming = false }
+
+        var done: [Transfer] = []
+        for old in batch.transfers {
+            if let created = await transfer(
+                id: old.id, old.source, to: old.destination, in: old.library, mode: batch.mode)
+            {
+                done.append(
+                    Transfer(
+                        id: old.id, source: old.source, destination: old.destination, library: old.library,
+                        createdFolder: created.createdFolder))
+            }
+        }
+        batch.transfers = done
     }
 
     // MARK: - Settings
