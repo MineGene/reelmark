@@ -84,7 +84,7 @@ No. Copy leaves the original exactly where it is, and Move only moves it. Reelma
 Reelmark handles video files only: every type Jellyfin plays, such as `mkv`, `mp4`, `avi`, `mov`, `ts`, `mts`, `vob`, `iso` and `webm`. It searches every folder you drag in, however deeply nested, including folders it reaches through links. Subtitles and other files stay where they are.
 
 **Does it update itself?**
-No. Reelmark never checks for updates, so new versions are on the [Releases](https://github.com/MineGene/reelmark/releases) page.
+No. Reelmark never checks for updates, so new versions are on the [Releases](https://github.com/MineGene/reelmark/releases) page, and [CHANGELOG.md](CHANGELOG.md) lists what changed in each.
 
 ## How it's made
 
