@@ -4,6 +4,10 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 ## [Unreleased]
 
+### Added
+
+- **Help › Report a Bug…** and **Request a Feature…** show what would be shared, then open a pre-filled GitHub issue in your browser. Nothing is sent unless you submit it, and file names, folders and tokens are never included.
+
 ## [0.1.9] - 2026-10-24
 
 ### Fixed

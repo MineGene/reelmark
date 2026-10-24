@@ -69,8 +69,16 @@ echo "${hosts:-none}"
 for host in $hosts; do
   case "$host" in
     api.themoviedb.org | www.themoviedb.org) ;;
+    # Help › Report a Bug…: only Reelmark's new-issue page, opened in the
+    # person's browser when they choose to (checked below).
+    github.com) ;;
     *) fail "Unexpected web address in the app: $host" ;;
   esac
+done
+github=$(strings -a "$binary" | grep -oE 'https://github\.com[^"[:space:]]*' | LC_ALL=C sort -u || true)
+for address in $github; do
+  [ "$address" = "https://github.com/MineGene/reelmark/issues/new" ] \
+    || fail "Unexpected GitHub address in the app: $address"
 done
 grep -qE 'http://' <(strings -a "$binary") && fail "The app contains an unencrypted http:// address"
 

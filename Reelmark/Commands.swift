@@ -1,3 +1,4 @@
+import ReelmarkCore
 import SwiftUI
 
 /// What the menu bar acts on: the main window's list and selection. The
@@ -23,6 +24,11 @@ struct ReelmarkCommands: Commands {
     @FocusedValue(\.listCommands) private var list
 
     var body: some Commands {
+        CommandGroup(after: .help) {
+            Divider()
+            Button("Report a Bug…") { model.report = .bug }
+            Button("Request a Feature…") { model.report = .feature }
+        }
         CommandGroup(replacing: .newItem) {
             Button("Add Files…") { model.isImporting = true }
                 .keyboardShortcut("o")

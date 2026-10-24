@@ -33,3 +33,8 @@ body:
       label: What happened, and what did you expect?
     validations:
       required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Details from Reelmark
+      description: Filled in when you use Help › Report a Bug… in Reelmark. It never includes file names, folders or tokens.

@@ -11,6 +11,7 @@ Only the latest release receives fixes. Reelmark doesn't update itself or check 
 ## Design
 
 - Sandboxed, with exactly four entitlements: sandbox, outgoing connections, user-selected files (read-write) and bookmarks for the chosen library folders. CI fails any build with a different set.
+- Help › Report a Bug… previews a summary and, only when the person clicks Open in Browser, opens Reelmark's GitHub new-issue page in their browser. The app itself never contacts GitHub, and CI fails a build containing any other GitHub address.
 - Network: HTTPS to `api.themoviedb.org` only, TLS 1.2 or later, ephemeral session (no cache, cookies or credential storage). CI fails a build containing any other web address.
 - Sends only a title and year, plus a TMDB access token: Reelmark's built-in read-only token (public on purpose), or the user's own if they add one, which is kept in the Keychain.
 - Never overwrites or deletes files; moving instead of copying is opt-in. Undo sends copies Reelmark made to the Trash, never the originals.
