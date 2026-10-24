@@ -122,7 +122,11 @@ final class ReelmarkUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Search The Movie Database"].waitForExistence(timeout: 10))
         // Command-Delete must not reach the list while the sheet's text field is in use.
         app.typeKey(.delete, modifierFlags: .command)
-        app.buttons["Cancel"].firstMatch.click()
+        // Escape is Cancel. (Clicking "Cancel" can hit the Touch Bar's copy
+        // of the button, which UI tests can't click.)
+        app.typeKey(.escape, modifierFlags: [])
+        let title = app.staticTexts["Search The Movie Database"]
+        XCTAssertTrue(eventually { !title.exists }, "The sheet didn't close")
         waitForItems(Self.all, in: app)
         assertStillRunning(app)
     }
