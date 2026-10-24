@@ -27,6 +27,9 @@ reviews:
     enabled: true
     drafts: false
     auto_incremental_review: true
+    # Review every push, however many commits a pull request has had
+    # (by default automatic reviews pause after five).
+    auto_pause_after_reviewed_commits: 0
   # The website's screenshots and the app icon aren't code.
   path_filters:
     - "!docs/**"
@@ -81,11 +84,20 @@ reviews:
         Commits prefix such as "feat:" or "fix:".
     description:
       mode: "off"
-  # Never commit to a pull request or open new ones.
+  # CodeRabbit reviews; Claude sessions write every change (see CLAUDE.md),
+  # so it never commits to a pull request or opens new ones.
   finishing_touches:
     docstrings:
       enabled: false
     unit_tests:
+      enabled: false
+    simplify:
+      enabled: false
+    autofix:
+      enabled: false
+    fix_ci:
+      enabled: false
+    resolve_merge_conflict:
       enabled: false
   tools:
     # The code is formatted with swift-format, whose rules differ from
