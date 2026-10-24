@@ -37,17 +37,25 @@ reviews:
         The macOS app (SwiftUI and AppKit, macOS 26 or later). Check the rules
         in CLAUDE.md's "Rules the design depends on": only a cleaned-up title
         and year go to api.themoviedb.org, and file names and paths are never
-        sent, logged or written to disk; never overwrite or delete a file
-        (Undo sends Reelmark's own copies to the Trash only); at most four
-        lookups at a time and no file contents read; standard controls with no
-        custom colours or fonts; anything newer than macOS 26 guarded with
+        sent, logged or written to disk, and any new web address is a finding;
+        never overwrite or delete a file (Undo sends Reelmark's own copies to
+        the Trash only, while the original exists), so flag `removeItem`,
+        overwriting writes and moves that could replace a file; a person's own
+        TMDB token lives only in the Keychain (the built-in one in
+        TMDBKey.swift is public on purpose); at most four lookups at a time
+        and no file contents read; standard controls with no custom colours
+        or fonts; Swift 6 strict concurrency, so watch main-actor state
+        touched from detached tasks; it must build with Xcode 26.6 as well as
+        27, with anything newer than macOS 26 guarded by
         `if #available(macOS 27, *)`; SwiftUI view bodies kept short, with
-        new modifiers in small methods or subviews.
+        new modifiers in small methods or subviews; no timestamps, absolute
+        paths or run-specific values in the build.
     - path: "Packages/ReelmarkCore/**"
       instructions: >-
         Core logic with XCTest tests. Every behaviour change needs a test,
         and every bug fix a regression test. Tests use invented release names
-        and empty placeholder files, never real media or the network.
+        and empty placeholder files, never real media or the network. No
+        third-party package dependencies.
     - path: "ReelmarkUITests/**"
       instructions: >-
         UI tests run on GitHub's slow macOS runners: waits need timeouts, and
