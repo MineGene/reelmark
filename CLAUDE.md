@@ -18,6 +18,16 @@ Reelmark is a native macOS app (Swift, SwiftUI) that renames downloaded movies a
 - Work happens in Claude Code cloud sessions; the maintainer keeps no clone or tools on their Mac. Anything that needs a Mac (installing a build, Activity Monitor, crash logs, trying a change) is theirs to do: ask them, say exactly what to check, and wait for the result.
 - Where a platform standard exists (Apple's Human Interface Guidelines, macOS conventions, GitHub norms), pick it and do it, mentioning the choice in one line. Still ask before anything irreversible or outward-facing, such as secrets or account and repository settings.
 
+## Writing commits and pull requests
+
+Commits and pull requests are a permanent record for people reading the history later, not a report of the session. Follow Git's own [SubmittingPatches](https://git-scm.com/docs/SubmittingPatches) and the Linux kernel's [Submitting patches](https://www.kernel.org/doc/html/latest/process/submitting-patches.html) for commits, and Google's [Writing good CL descriptions](https://google.github.io/eng-practices/review/developer/cl-descriptions.html) for pull requests. No Conventional Commits prefixes.
+
+- **Subject:** imperative mood, completing "If applied, this commit will…" ("Add Redo to Copy and Move to Library"). About 50 characters, at most 72; capitalised; no full stop.
+- **Body:** after a blank line, wrapped at 72 characters. Describe the problem first, then what the change does about it and why this way. It must make sense to someone who never saw the conversation.
+- **Neutral voice:** no "you", "I", "we", "the user asked", "the maintainer picked" or narration of the session. State the reason itself: "Copies had no way back" rather than "The maintainer asked for undo".
+- **Pull request description:** use the template's sections (Summary, Motivation, Changes, Testing). Link the issue it fixes ("Fixes #12"). Testing says what CI covers and what still needs checking by hand on a Mac.
+- **Title:** the same rules as a commit subject; it becomes the squash commit's subject.
+
 ## Building and testing
 
 - There is no Xcode here. GitHub Actions is the compiler and test runner: push, then read the check annotations (`scripts/annotate-errors.sh` turns errors into annotations with file and line).
