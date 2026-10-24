@@ -27,7 +27,7 @@ So some ideas, however good, won't fit, and the maintainer will say so kindly an
 
 ## Who decides
 
-Reelmark has one maintainer, who sets its direction, tests on a real Mac and approves releases. Most code is written by Claude through Claude Code, openly; its commits are authored by [MachineGene](https://github.com/MachineGene), the maintainer's bot account for AI-written work. Decisions and their reasons are written down in issues and pull requests, so anyone can follow them. The maintainer aims to reply to new issues and pull requests within a week.
+Reelmark has one maintainer, who sets its direction, tests on a real Mac and approves releases. Most code is written by Claude through Claude Code, openly; its commits, pull requests and comments come from [MachineGene](https://github.com/MachineGene), the maintainer's bot account for AI-written work. Decisions and their reasons are written down in issues and pull requests, so anyone can follow them. The maintainer aims to reply to new issues and pull requests within a week.
 
 ## Privacy rules
 
@@ -43,7 +43,7 @@ The *Commit privacy* check enforces the email and trailer rules on every pull re
 1. Branch from `main`; one change per pull request.
 2. Write commit messages the way Git itself asks: a short subject in the imperative ("Fix crash when clearing the list"), a blank line, then what the problem was and why this fixes it. Fill in the pull request template's sections. The history should make sense to someone who reads it years later.
 3. Push and open a pull request. CI builds the app, runs the tests, checks permissions, web addresses and commit privacy, and runs CodeQL. Nothing needs a Mac except trying the app.
-4. The maintainer's pull requests (including Claude's) are squash-merged automatically once every required check passes: auto-merge is turned on as each one is opened. Pull requests from forks and Dependabot are merged by hand. The maintainer can still review, hold (turn off auto-merge) or close any pull request.
+4. Pull requests from the maintainer and from MachineGene (Claude's) are squash-merged automatically once every required check passes: auto-merge is turned on as each one is opened. Pull requests from forks and Dependabot are merged by hand. The maintainer can still review, hold (turn off auto-merge) or close any pull request.
 
 `main` is protected: no direct pushes, force pushes or deletions.
 

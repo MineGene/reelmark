@@ -124,7 +124,7 @@ No. Reelmark never checks for updates, so new versions are on the [Releases](htt
 
 ## How it's made
 
-Reelmark is written almost entirely by Claude, Anthropic's AI, through Claude Code, with the maintainer setting the direction and testing on a real Mac. Claude's commits are authored by [MachineGene](https://github.com/MachineGene), so they're easy to tell apart from the maintainer's. Nothing is built on a personal machine: GitHub Actions builds, tests and releases every version. Every change is checked automatically for permissions, web addresses, commit privacy, reproducibility and code scanning.
+Reelmark is written almost entirely by Claude, Anthropic's AI, through Claude Code, with the maintainer setting the direction and testing on a real Mac. Claude's commits, pull requests and comments come from [MachineGene](https://github.com/MachineGene), so they're easy to tell apart from the maintainer's. Nothing is built on a personal machine: GitHub Actions builds, tests and releases every version. Every change is checked automatically for permissions, web addresses, commit privacy, reproducibility and code scanning.
 
 ## Contributing and security
 
