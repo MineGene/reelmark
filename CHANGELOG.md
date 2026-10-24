@@ -4,6 +4,10 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 ## [Unreleased]
 
+### Fixed
+
+- The window can be made much smaller, so macOS window tiling can fit it in half or a quarter of the screen beside other apps.
+
 ## [0.1.9] - 2026-10-24
 
 ### Fixed
