@@ -176,6 +176,28 @@ jobs:
             --target "$GITHUB_SHA" \
             --generate-notes
 
+  mac-checklist:
+    name: Open the Mac checklist
+    needs: [plan, release]
+    # Some checks need a person on a real Mac. This gathers the "Check on a
+    # Mac" boxes from the release's pull requests into one issue to tick off.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write # open the checklist issue
+      pull-requests: read # read the pull requests' checks
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Open the checklist issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: scripts/mac-checklist.sh "$VERSION"
+
   verify:
     name: Verify release
     needs: [plan, release]

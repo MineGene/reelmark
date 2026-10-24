@@ -74,6 +74,7 @@ They're all in the File menu too, and right-clicking an item offers Search Again
 - **Only a title and year leave your Mac:** for example "Severance 2022", sent to TMDB's API. File names, folders and everything else stay on your Mac.
 - **Nothing collected:** no analytics, no crash reporting, no update checks, and nothing about your files is logged or saved.
 - **Sandboxed:** Reelmark can only touch the files you add and the two library folders you choose.
+- **Declared the standard way:** Reelmark includes Apple's privacy manifest, which states that it doesn't track you and collects no data.
 - **Checked automatically:** every build is tested for the exact permissions and for TMDB being the only web address in the app.
 
 Reelmark comes with its own read-only TMDB access token. It's public on purpose, as any key inside an open-source app would be. If you'd rather use your own, paste the **API Read Access Token** from your [TMDB account](https://www.themoviedb.org/settings/api) into Settings; it's stored in your Keychain.
@@ -101,7 +102,7 @@ No. Copy leaves the original exactly where it is, and Move only moves it. Reelma
 Reelmark handles video files only: every type Jellyfin plays, such as `mkv`, `mp4`, `avi`, `mov`, `ts`, `mts`, `vob`, `iso` and `webm`. It searches every folder you drag in, however deeply nested, including folders it reaches through links. Subtitles and other files stay where they are.
 
 **Does it update itself?**
-No. Reelmark never checks for updates, so new versions are on the [Releases](https://github.com/MineGene/reelmark/releases) page.
+No. Reelmark never checks for updates, so new versions are on the [Releases](https://github.com/MineGene/reelmark/releases) page, and [CHANGELOG.md](CHANGELOG.md) lists what changed in each.
 
 ## How it's made
 
@@ -109,7 +110,7 @@ Reelmark is written almost entirely by Claude, Anthropic's AI, through Claude Co
 
 ## Contributing and security
 
-Bug reports and ideas are welcome on [Issues](https://github.com/MineGene/reelmark/issues). Please don't attach media files or screenshots of your library. See [CONTRIBUTING.md](CONTRIBUTING.md) for how changes are made and checked, and [SECURITY.md](SECURITY.md) to report a security problem privately.
+Bug reports and ideas are welcome on [Issues](https://github.com/MineGene/reelmark/issues), and questions in [Discussions](https://github.com/MineGene/reelmark/discussions) (see [SUPPORT.md](SUPPORT.md)). Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please don't attach media files or screenshots of your library. See [CONTRIBUTING.md](CONTRIBUTING.md) for how changes are made and checked, and [SECURITY.md](SECURITY.md) to report a security problem privately.
 
 ## License
 
