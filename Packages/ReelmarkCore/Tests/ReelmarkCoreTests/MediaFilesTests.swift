@@ -104,4 +104,90 @@ final class MediaFilesTests: XCTestCase {
         XCTAssertEqual(try String(contentsOf: destination, encoding: .utf8), "old")
         XCTAssertTrue(FileManager.default.fileExists(atPath: source.path))
     }
+
+    // MARK: Undo
+
+    private func exists(_ url: URL) -> Bool { FileManager.default.fileExists(atPath: url.path) }
+
+    func testTransferReportsTheOutermostFolderItCreated() throws {
+        try FileManager.default.createDirectory(
+            at: root.appending(path: "Library"), withIntermediateDirectories: true)
+        let source = try make("in/s.mkv")
+        let created = try MediaFiles.transfer(
+            source, to: root.appending(path: "Library/Show (2020)/Season 01/s.mkv"), mode: .copy)
+        XCTAssertEqual(created?.lastPathComponent, "Show (2020)")
+
+        let again = try make("in/t.mkv")
+        XCTAssertNil(
+            try MediaFiles.transfer(
+                again, to: root.appending(path: "Library/Show (2020)/Season 01/t.mkv"), mode: .copy))
+    }
+
+    func testUndoMovePutsTheFileBack() throws {
+        let source = try make("in/a.mkv", contents: "video")
+        let destination = root.appending(path: "Library/Film (2020)/Film (2020).mkv")
+        let created = try MediaFiles.transfer(source, to: destination, mode: .move)
+        try MediaFiles.undoTransfer(source, to: destination, mode: .move, createdFolder: created)
+        XCTAssertEqual(try String(contentsOf: source, encoding: .utf8), "video")
+        XCTAssertFalse(exists(destination))
+        XCTAssertFalse(exists(root.appending(path: "Library/Film (2020)")), "Empty folder left behind")
+    }
+
+    func testUndoCopyTrashesTheCopyAndKeepsTheOriginal() throws {
+        let source = try make("in/b.mkv", contents: "video")
+        let destination = root.appending(path: "Library/Film (2020)/Film (2020).mkv")
+        let created = try MediaFiles.transfer(source, to: destination, mode: .copy)
+        try MediaFiles.undoTransfer(source, to: destination, mode: .copy, createdFolder: created)
+        XCTAssertEqual(try String(contentsOf: source, encoding: .utf8), "video")
+        XCTAssertFalse(exists(destination))
+        XCTAssertFalse(exists(root.appending(path: "Library/Film (2020)")))
+    }
+
+    func testUndoCopyKeepsTheCopyWhenTheOriginalIsGone() throws {
+        let source = try make("in/c.mkv")
+        let destination = root.appending(path: "Library/c.mkv")
+        try MediaFiles.transfer(source, to: destination, mode: .copy)
+        try FileManager.default.moveItem(at: source, to: root.appending(path: "elsewhere.mkv"))
+        XCTAssertThrowsError(
+            try MediaFiles.undoTransfer(source, to: destination, mode: .copy, createdFolder: nil)
+        ) { error in
+            XCTAssertEqual(error as? MediaFiles.TransferError, .originalMissing("c.mkv"))
+        }
+        XCTAssertTrue(exists(destination))
+    }
+
+    func testUndoMoveNeverOverwrites() throws {
+        let source = try make("in/d.mkv", contents: "moved")
+        let destination = root.appending(path: "Library/d.mkv")
+        try MediaFiles.transfer(source, to: destination, mode: .move)
+        try make("in/d.mkv", contents: "new download")
+        XCTAssertThrowsError(
+            try MediaFiles.undoTransfer(source, to: destination, mode: .move, createdFolder: nil)
+        ) { error in
+            XCTAssertEqual(error as? MediaFiles.TransferError, .originalPlaceTaken("d.mkv"))
+        }
+        XCTAssertEqual(try String(contentsOf: source, encoding: .utf8), "new download")
+        XCTAssertEqual(try String(contentsOf: destination, encoding: .utf8), "moved")
+    }
+
+    func testUndoKeepsAFolderThatHoldsOtherFiles() throws {
+        let source = try make("in/e.mkv")
+        let destination = root.appending(path: "Library/Film (2020)/Film (2020).mkv")
+        let created = try MediaFiles.transfer(source, to: destination, mode: .copy)
+        try make("Library/Film (2020)/Film (2020).en.srt")
+        try MediaFiles.undoTransfer(source, to: destination, mode: .copy, createdFolder: created)
+        XCTAssertTrue(exists(root.appending(path: "Library/Film (2020)/Film (2020).en.srt")))
+    }
+
+    func testUndoSaysWhenTheFileIsNoLongerInTheLibrary() throws {
+        let source = try make("in/f.mkv")
+        let destination = root.appending(path: "Library/f.mkv")
+        try MediaFiles.transfer(source, to: destination, mode: .copy)
+        try FileManager.default.moveItem(at: destination, to: root.appending(path: "renamed.mkv"))
+        XCTAssertThrowsError(
+            try MediaFiles.undoTransfer(source, to: destination, mode: .copy, createdFolder: nil)
+        ) { error in
+            XCTAssertEqual(error as? MediaFiles.TransferError, .notInLibrary("f.mkv"))
+        }
+    }
 }

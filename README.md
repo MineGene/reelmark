@@ -23,7 +23,7 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 - **Movies and TV:** handles episodes, seasons and multi-episode files (`S01E01-E02`), including season folders like `Show/Season 2/Episode 03.mkv`.
 - **You stay in control:** check every match before anything happens, choose a different match from a list, or search again by hand.
 - **Copy or move:** Copy is the default, so your torrent client can keep seeding. On the same drive, a copy takes no extra space.
-- **Safe:** never overwrites and never deletes anything.
+- **Safe:** never overwrites and never deletes anything. Edit ▸ Undo reverses the last Copy or Move, as in Finder.
 - **Nothing to set up:** no account, sign-in or API key needed.
 - **A real Mac app:** standard macOS controls, light and dark mode, VoiceOver, and a Liquid Glass icon.
 - **Free and open source:** MIT licensed, with no tracking and no ads.
@@ -50,7 +50,7 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 1. **Choose your library folders:** open **Reelmark › Settings** and choose your Jellyfin Movies and Shows folders. You only need to do this once.
 2. **Add downloads:** drag video files or whole download folders into the window, or click **Add Files** (⌘O). Reelmark looks up each one on TMDB.
 3. **Check the matches:** the New Name column shows where each file will go. If there's more than one possible match, pick the right one from the menu. To search with a different title, right-click and choose **Search Again…**.
-4. **Copy to Library:** click **Copy to Library**, or **Move to Library** if you've chosen Move in Settings. **Clear** empties the list when you're done (your files aren't touched), and Delete removes just the selected items.
+4. **Copy to Library:** click **Copy to Library**, or **Move to Library** if you've chosen Move in Settings. **Clear** empties the list when you're done (your files aren't touched), and Delete removes just the selected items. Changed your mind? **Edit ▸ Undo** (⌘Z) puts moved files back and sends copies to the Trash, and **Edit ▸ Redo** (⇧⌘Z) files them again.
 
 ## Privacy
 
@@ -78,7 +78,7 @@ Rebuilds match byte for byte, except the pixels of the app icon's pre-rendered p
 Apple's notarisation needs a paid developer account. Reelmark is free and unsigned, so macOS asks you to confirm once per version, with the Terminal command or **Open Anyway** under Install. The command only removes the "downloaded from the internet" mark from Reelmark itself. You can check the download yourself first with the steps above.
 
 **Does it change or delete my downloads?**
-No. Copy leaves the original exactly where it is, and Move only moves it. Reelmark never deletes anything, and never overwrites a file that's already in your library.
+No. Copy leaves the original exactly where it is, and Move only moves it. Reelmark never deletes anything, and never overwrites a file that's already in your library. Undoing a copy sends the copy (never the original) to the Trash, where you can still get it back.
 
 **What about subtitles and other files?**
 Reelmark handles video files only: every type Jellyfin plays, such as `mkv`, `mp4`, `avi`, `mov`, `ts`, `mts`, `vob`, `iso` and `webm`. It searches every folder you drag in, however deeply nested, including folders it reaches through links. Subtitles and other files stay where they are.
