@@ -55,7 +55,11 @@ struct ReelmarkApp: App {
         Window("Reelmark", id: "main") {
             ContentView()
                 .environment(model)
-                .frame(minWidth: 760, minHeight: 420)
+                // Small enough to tile in a quarter of a laptop screen, as
+                // macOS window tiling does, beside Activity Monitor or Jellyfin.
+                // Columns and toolbar buttons that don't fit scroll or move
+                // into the toolbar's overflow menu, as in Finder.
+                .frame(minWidth: 480, minHeight: 300)
         }
         // A fixed starting size, so a long list can't ask for a window taller
         // than the screen. macOS remembers any size the person chooses.

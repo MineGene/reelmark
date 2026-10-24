@@ -13,6 +13,11 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 - The first time you copy or move files, Reelmark asks for your Jellyfin Movies or Shows folder instead of stopping with a message about Settings.
 - VoiceOver names the list, its status column, the match menu and the progress spinners, and announces when adding files or copying finishes.
+- Matching a long list of different titles is about four times faster: up to four lookups run at once, files with the same title share one lookup, and when The Movie Database is busy Reelmark waits as long as it asks.
+
+### Fixed
+
+- The window can be made much smaller, so macOS window tiling can fit it in half or a quarter of the screen beside other apps.
 
 ## [0.1.9] - 2026-10-24
 
