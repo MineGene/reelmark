@@ -234,11 +234,17 @@ final class ReelmarkUITests: XCTestCase {
                 .matching(NSPredicate(format: "label == %@ OR title == %@", column, column)).firstMatch
             XCTAssertTrue(header.exists, "No \(column) column header for VoiceOver")
         }
+        // Counted by row: UI tests can find a status twice in one row (the
+        // cell and the icon inside it), though VoiceOver reads it once.
         let statuses = [("In your library", 2), ("Needs attention", 1), ("Ready to file", 1)]
         for (label, count) in statuses {
             let icons = app.images.matching(NSPredicate(format: "label == %@", label))
-            XCTAssertTrue(
-                eventually { icons.count == count }, "Expected \(count) “\(label)” icons, not \(icons.count)")
+            let rows = {
+                // Centres more than 8 points apart are different rows.
+                let centres = icons.allElementsBoundByIndex.map(\.frame.midY).sorted()
+                return zip(centres, centres.dropFirst()).count(where: { $1 - $0 > 8 }) + (centres.isEmpty ? 0 : 1)
+            }
+            XCTAssertTrue(eventually { rows() == count }, "Expected \(count) rows “\(label)”, not \(rows())")
         }
     }
 
