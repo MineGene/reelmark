@@ -37,4 +37,17 @@ final class TMDBDecodingTests: XCTestCase {
         let matches = try TMDBClient.decodeSearch(Data(#"{"results":[\#(results)]}"#.utf8), kind: .movie)
         XCTAssertEqual(matches.count, TMDBClient.maxResults)
     }
+
+    func testRetryAfterReadsWholeSeconds() {
+        XCTAssertEqual(TMDBClient.retryAfter("5"), 5)
+        XCTAssertEqual(TMDBClient.retryAfter(" 12 "), 12)
+        XCTAssertEqual(TMDBClient.retryAfter("0"), 0)
+    }
+
+    func testRetryAfterIgnoresWhatItCantRead() {
+        XCTAssertNil(TMDBClient.retryAfter(nil))
+        XCTAssertNil(TMDBClient.retryAfter(""))
+        XCTAssertNil(TMDBClient.retryAfter("-3"))
+        XCTAssertNil(TMDBClient.retryAfter("Wed, 21 Oct 2026 07:28:00 GMT"))
+    }
 }
