@@ -54,6 +54,9 @@ final class LibraryModel {
         }
     }
 
+    /// The one model the window, the menus and Shortcuts actions share.
+    static let shared = LibraryModel.forLaunch()
+
     private(set) var items: [Item] = []
     private(set) var isRenaming = false
     /// True while dropped folders are still being searched for videos.
@@ -125,6 +128,15 @@ final class LibraryModel {
             reindex()
             waiting.append(contentsOf: fresh.map(\.id))
             lookUpPending()
+        }
+    }
+
+    /// Waits until added folders are searched and every item is looked up,
+    /// so a Shortcut can add files and file them in one go.
+    func waitUntilMatched() async {
+        while isScanning || lookup != nil {
+            if Task.isCancelled { return }
+            try? await Task.sleep(for: .milliseconds(250))
         }
     }
 
