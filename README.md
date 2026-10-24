@@ -69,6 +69,15 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 
 They're all in the File menu too, and right-clicking an item offers Search Again…, Show in Finder and Remove from List.
 
+### Shortcuts and Spotlight
+
+Reelmark adds two actions to the Shortcuts app, which Spotlight can run too:
+
+- **Add Files to Reelmark:** adds video files or download folders, as dragging them in does. Use it in a Finder Quick Action, or a Folder Action on your downloads folder.
+- **Add Matched Files to Library:** waits for the matches, then copies or moves every matched file, as the Copy to Library button does.
+
+They run inside Reelmark, so nothing more leaves your Mac than when you use the window.
+
 ## Privacy
 
 - **Only a title and year leave your Mac:** for example "Severance 2022", sent to TMDB's API. File names, folders and everything else stay on your Mac.
