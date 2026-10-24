@@ -1,0 +1,96 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# Settings for CodeRabbit, the code review app on this repository. They
+# override the app's web settings, so they're reviewed like any other change.
+# https://docs.coderabbit.ai/reference/configuration
+#
+# The aim: flag real bugs and breaks of the rules in CLAUDE.md, not style.
+# swift-format already checks style in CI, and every comment is a finding a
+# session has to verify and answer before the pull request merges.
+language: en-GB
+early_access: false
+tone_instructions: >-
+  Be brief and concrete. Comment only on bugs, data loss, privacy, security,
+  accessibility and breaks of CLAUDE.md's rules. No praise, no style nits.
+
+reviews:
+  profile: chill
+  # Auto-merge waits on the required checks, not on reviews; a request for
+  # changes would only add noise.
+  request_changes_workflow: false
+  high_level_summary: true
+  review_status: true
+  collapse_walkthrough: true
+  sequence_diagrams: false
+  poem: false
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: true
+  # The website's screenshots and the app icon aren't code.
+  path_filters:
+    - "!docs/**"
+    - "!Reelmark/AppIcon.icon/**"
+  path_instructions:
+    - path: "Reelmark/**/*.swift"
+      instructions: >-
+        The macOS app (SwiftUI and AppKit, macOS 26 or later). Check the rules
+        in CLAUDE.md's "Rules the design depends on": only a cleaned-up title
+        and year go to api.themoviedb.org, and file names and paths are never
+        sent, logged or written to disk; never overwrite or delete a file
+        (Undo sends Reelmark's own copies to the Trash only); at most four
+        lookups at a time and no file contents read; standard controls with no
+        custom colours or fonts; anything newer than macOS 26 guarded with
+        `if #available(macOS 27, *)`; SwiftUI view bodies kept short, with
+        new modifiers in small methods or subviews.
+    - path: "Packages/ReelmarkCore/**"
+      instructions: >-
+        Core logic with XCTest tests. Every behaviour change needs a test,
+        and every bug fix a regression test. Tests use invented release names
+        and empty placeholder files, never real media or the network.
+    - path: "ReelmarkUITests/**"
+      instructions: >-
+        UI tests run on GitHub's slow macOS runners: waits need timeouts, and
+        test settings go in the launch environment, never launch arguments.
+    - path: ".github/workflows/**"
+      instructions: >-
+        Actions must be pinned to a full commit SHA, with the least
+        permissions needed. Never enable auto-merge from a workflow.
+    - path: "Config/**"
+      instructions: >-
+        The app has exactly four entitlements (sandbox, outgoing network,
+        user-selected read-write, app-scoped bookmarks); flag any other.
+  # Checks that don't fit: the code has few doc comments by design (comments
+  # say why, where it isn't obvious), and pull requests follow the template.
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+    title:
+      mode: warning
+      requirements: >-
+        Imperative mood, completing "If applied, this commit will…";
+        capitalised; at most 72 characters; no full stop; no Conventional
+        Commits prefix such as "feat:" or "fix:".
+    description:
+      mode: "off"
+  # Never commit to a pull request or open new ones.
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+  tools:
+    # The code is formatted with swift-format, whose rules differ from
+    # SwiftLint's defaults, so SwiftLint would only report style clashes.
+    swiftlint:
+      enabled: false
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "CLAUDE.md"
+      - "CONTRIBUTING.md"
