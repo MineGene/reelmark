@@ -100,9 +100,21 @@ final class ReelmarkUITests: XCTestCase {
                 let emptyState = app.staticTexts["Drag Movies and TV Episodes Here"]
                 XCTAssertTrue(emptyState.waitForExistence(timeout: 10))
             }
-            try app.performAccessibilityAudit()
+            // Collect every issue, then fail once listing them all, so one CI
+            // run shows everything that needs fixing.
+            var issues: [String] = []
+            try app.performAccessibilityAudit { issue in
+                issues.append(
+                    "\(issue.compactDescription): \(issue.element.map { "\($0)" } ?? "no element")")
+                return true
+            }
+            XCTAssertTrue(
+                issues.isEmpty,
+                "Accessibility audit (\(withItems ? "list" : "empty window")):\n"
+                    + issues.joined(separator: "\n"))
             app.terminate()
         }
+    }
     }
 
     /// VoiceOver reads each row as one sentence: file, match and what happens next.

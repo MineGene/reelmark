@@ -176,9 +176,13 @@ struct ItemList: NSViewRepresentable {
 
         /// Each row reads as one sentence, so VoiceOver users moving down the
         /// list hear everything about an item without visiting every column.
-        func tableView(_ tableView: NSTableView, didAdd rowView: NSTableRowView, forRow row: Int) {
-            guard rows.indices.contains(row) else { return }
-            rowView.setAccessibilityLabel(Self.spoken(rows[row]))
+        func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
+            let identifier = NSUserInterfaceItemIdentifier("SpokenRow")
+            let reused = tableView.makeView(withIdentifier: identifier, owner: nil) as? SpokenRowView
+            let rowView = reused ?? SpokenRowView()
+            rowView.identifier = identifier
+            rowView.spoken = rows.indices.contains(row) ? Self.spoken(rows[row]) : nil
+            return rowView
         }
 
         static func spoken(_ item: Item) -> String {
@@ -330,6 +334,14 @@ final class DeletingTableView: NSTableView {
     }
 }
 
+/// A table row that VoiceOver reads as one sentence. (AppKit asks the row
+/// for its label each time, so overriding it is more reliable than setting it.)
+private final class SpokenRowView: NSTableRowView {
+    var spoken: String?
+
+    override func accessibilityLabel() -> String? { spoken }
+}
+
 /// One line of text, vertically centred, truncated to fit.
 private final class LabelCell: NSTableCellView {
     private let field = NSTextField(labelWithString: "")
@@ -409,6 +421,8 @@ private final class IconCell: NSTableCellView {
 
     func show(_ symbol: String?, color: NSColor?, label: String?, help: String?) {
         icon.image = symbol.flatMap { NSImage(systemSymbolName: $0, accessibilityDescription: label) }
+        // An empty icon would be an unnamed image to VoiceOver.
+        icon.isHidden = symbol == nil
         icon.contentTintColor = color
         icon.toolTip = help
         icon.setAccessibilityHelp(help)

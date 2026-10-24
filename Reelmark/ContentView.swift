@@ -28,6 +28,7 @@ struct ContentView: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dropArea")
+        .accessibilityLabel(model.items.isEmpty ? "Drop files here" : "Files to rename")
         .toolbar { toolbar }
         .navigationSubtitle(itemCount)
         // VoiceOver says when slow work finishes, which sighted people see
