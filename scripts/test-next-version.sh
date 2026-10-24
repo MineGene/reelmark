@@ -65,4 +65,8 @@ printf '### Fixed\n\n- An entry that mentions ### Added in passing.\n' >changelo
 commit "Fix with a mention"
 expect "only real headings count" "0.3.1" "$(next)"
 
+printf '### Added\n\n### Fixed\n\n- Empty groups are ignored.\n' >changelog.d/empty.md
+commit "Fix with an empty Added group"
+expect "an empty feature group doesn't count" "0.3.1" "$(next)"
+
 echo "All next-version tests passed."
