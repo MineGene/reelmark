@@ -104,6 +104,9 @@ final class ReelmarkUITests: XCTestCase {
         app.open(file)
         XCTAssertTrue(item(name, in: app).waitForExistence(timeout: 10), "The opened file wasn't added")
         assertStillRunning(app)
+        // macOS launched this copy to open the file, outside the test's own
+        // launch, so quit it: left running, the next tests found it instead.
+        app.terminate()
     }
 
     @MainActor
