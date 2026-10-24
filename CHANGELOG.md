@@ -7,6 +7,7 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 ### Added
 
 - Two actions for the Shortcuts app and Spotlight: **Add Files to Reelmark**, and **Add Matched Files to Library**, which waits for the matches and then files them.
+- Videos and download folders can be dropped on Reelmark's Dock icon, opened with Finder's **Open With › Reelmark**, or added with Finder's **Services › Add to Reelmark**. Right-clicking the Dock icon offers **Add Files…**.
 
 ### Changed
 

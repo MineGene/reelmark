@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 
 /// Launches the real app and uses it the way a person would, so anything
@@ -124,6 +125,34 @@ final class ReelmarkUITests: XCTestCase {
             app.terminate()
         }
         XCTAssertTrue(issues.isEmpty, "Accessibility audit:\n" + issues.joined(separator: "\n"))
+    }
+
+    /// Opening a video with Reelmark (Finder's Open With, or a drop on the
+    /// Dock icon) adds it to the list. The file is an empty placeholder.
+    @MainActor
+    func testOpeningAVideoWithReelmarkAddsIt() throws {
+        let name = "Made.Up.Opened.Movie.2020.mkv"
+        let folder = FileManager.default.temporaryDirectory
+            .appending(path: "ReelmarkOpen-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let file = folder.appending(path: name)
+        try Data().write(to: file)
+
+        let app = launch(withItems: false)
+        XCTAssertTrue(app.staticTexts["Drag Movies and TV Episodes Here"].waitForExistence(timeout: 10))
+        app.open(file)
+        XCTAssertTrue(item(name, in: app).waitForExistence(timeout: 10), "The opened file wasn't added")
+        assertStillRunning(app)
+        // macOS may launch a second copy to open the file, outside the test's
+        // own launch, which app.terminate() doesn't reach. Quit every copy:
+        // one left running was found by the next tests instead.
+        app.terminate()
+        let copies = {
+            NSRunningApplication.runningApplications(withBundleIdentifier: "com.minegene.reelmark")
+        }
+        copies().forEach { $0.forceTerminate() }
+        XCTAssertTrue(eventually { copies().isEmpty }, "A copy of Reelmark kept running")
     }
 
     @MainActor
