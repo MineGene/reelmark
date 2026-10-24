@@ -2,8 +2,10 @@ name: Release
 
 # Releases happen by themselves: as soon as a change to the app is merged
 # into main, this builds, tests and publishes the next patch version
-# (0.1.0, 0.1.1, …), then a fresh machine downloads and rebuilds it to
-# verify it. Changes to docs, tests or CI alone don't make a release.
+# (0.1.0, 0.1.1, …) as a pre-release, then a fresh machine downloads and
+# rebuilds it to verify it. Changes to docs, tests or CI alone don't make
+# a release. Pre-releases become the stable release once they've been
+# checked on a Mac: see promote.yml.
 #
 # Merges only start this when a person merged or turned on auto-merge:
 # GitHub never starts workflows from its own token's actions. So a nightly
@@ -139,6 +141,8 @@ jobs:
         run: |
           sha=$(cut -d' ' -f1 "build/$NAME.sha256")
           cat > build/notes.md <<EOF
+          Every version is published first as a pre-release, then becomes the stable release once it has been checked on a Mac, usually the following Monday. For the newest checked version, use the [latest release](https://github.com/$GITHUB_REPOSITORY/releases/latest).
+
           ## Install
 
           1. Download **$NAME** below, open it and drag Reelmark to Applications.
@@ -174,6 +178,7 @@ jobs:
             --title "Reelmark $VERSION" \
             --notes-file build/notes.md \
             --target "$GITHUB_SHA" \
+            --prerelease \
             --generate-notes
 
   verify:
