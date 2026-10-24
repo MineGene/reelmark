@@ -19,18 +19,23 @@ reviews:
   # stays a person's: CodeRabbit neither approves nor requests changes.
   auto_approvals:
     enabled: false
+  # Every edit CodeRabbit makes to a pull request wakes the session working
+  # on it, so it edits as little as it can: its summary stays in its own
+  # comment rather than the description, with no "review in progress"
+  # status or banner.
   high_level_summary: true
-  review_status: true
+  high_level_summary_in_walkthrough: true
+  review_status: false
+  in_progress_fortune: false
   collapse_walkthrough: true
   sequence_diagrams: false
   poem: false
   auto_review:
     enabled: true
     drafts: false
-    auto_incremental_review: true
-    # Review every push, however many commits a pull request has had
-    # (by default automatic reviews pause after five).
-    auto_pause_after_reviewed_commits: 0
+    # One review per pull request, when it opens: the session judges that
+    # review and pushes its fixes, which aren't reviewed again.
+    auto_incremental_review: false
   # The website's screenshots and the app icon aren't code.
   path_filters:
     - "!docs/**"
