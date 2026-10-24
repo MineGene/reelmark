@@ -90,21 +90,15 @@ struct SettingsView: View {
         }
     }
 
-    /// The open panel is what grants the sandbox access to the folder.
     private func choose(_ kind: Match.Kind) {
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.canCreateDirectories = true
-        panel.allowsMultipleSelection = false
-        panel.prompt = "Choose"
-        panel.message = "Choose your Jellyfin \(kind == .movie ? "Movies" : "Shows") library folder."
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        do {
-            try model.setFolder(url, for: kind)
-            folderError = nil
-        } catch {
-            folderError = "Reelmark couldn't remember that folder: \(error.localizedDescription)"
+        Task {
+            guard let url = await LibraryFolders.choose(kind, attachedTo: NSApp.keyWindow) else { return }
+            do {
+                try model.setFolder(url, for: kind)
+                folderError = nil
+            } catch {
+                folderError = "Reelmark couldn't remember that folder: \(error.localizedDescription)"
+            }
         }
     }
 }

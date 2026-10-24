@@ -1,3 +1,4 @@
+import AppKit
 import ReelmarkCore
 import SwiftUI
 
@@ -112,8 +113,19 @@ struct ContentView: View {
         }
     }
 
+    /// Files the matched items. The first time, it asks for any library
+    /// folder they need with the standard open panel, rather than failing
+    /// with a message pointing to Settings. Cancelling the panel leaves
+    /// those items with that message instead.
     private func fileReady() {
-        Task { await model.renameReady(undoManager: undoManager) }
+        Task {
+            for kind in model.missingFolders {
+                let window = NSApp.keyWindow
+                guard let url = await LibraryFolders.choose(kind, attachedTo: window) else { continue }
+                try? model.setFolder(url, for: kind)
+            }
+            await model.renameReady(undoManager: undoManager)
+        }
     }
 
     /// Opens the Search Again sheet for one item, filled in with its title.
