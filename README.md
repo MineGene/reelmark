@@ -57,6 +57,7 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 - **Only a title and year leave your Mac:** for example "Severance 2022", sent to TMDB's API. File names, folders and everything else stay on your Mac.
 - **Nothing collected:** no analytics, no crash reporting, no update checks, and nothing about your files is logged or saved.
 - **Sandboxed:** Reelmark can only touch the files you add and the two library folders you choose.
+- **Declared the standard way:** Reelmark includes Apple's privacy manifest, which states that it doesn't track you and collects no data.
 - **Checked automatically:** every build is tested for the exact permissions and for TMDB being the only web address in the app.
 
 Reelmark comes with its own read-only TMDB access token. It's public on purpose, as any key inside an open-source app would be. If you'd rather use your own, paste the **API Read Access Token** from your [TMDB account](https://www.themoviedb.org/settings/api) into Settings; it's stored in your Keychain.

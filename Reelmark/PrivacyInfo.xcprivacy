@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  Reelmark's privacy manifest, in Apple's standard format: what the app
+  collects (nothing), whether it tracks (no), and why it uses APIs Apple
+  asks apps to explain.
+
+  The only one is UserDefaults, for Reelmark's own settings: the Copy or
+  Move choice and the bookmarks for the chosen library folders (reason
+  CA92.1, data only this app reads). A title and year sent to TMDB for a
+  search isn't "collected" data in Apple's sense, since it's used only to
+  answer that search there and then.
+-->
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
