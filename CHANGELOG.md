@@ -4,13 +4,19 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 ## [Unreleased]
 
-### Added
+Changes not yet released are in [changelog.d](changelog.d), one file per pull request. They move here once they're released.
 
-- After you add files to a long list, it scrolls to the first new one and selects it, as Finder does with pasted files.
+## [0.1.20] - 2026-10-24
 
 ### Changed
 
 - VoiceOver names the list, its status column, the match menu and the progress spinners, and announces when adding files or copying finishes.
+
+## [0.1.19] - 2026-10-24
+
+### Added
+
+- After you add files to a long list, it scrolls to the first new one and selects it, as Finder does with pasted files.
 
 ## [0.1.18] - 2026-10-24
 
@@ -161,7 +167,9 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 - First release: drag in downloaded movies and TV episodes, check the matches from The Movie Database, and copy or move them into a Jellyfin library with the folder and file names Jellyfin expects.
 
-[Unreleased]: https://github.com/MineGene/reelmark/compare/v0.1.18...HEAD
+[Unreleased]: https://github.com/MineGene/reelmark/compare/v0.1.20...HEAD
+[0.1.20]: https://github.com/MineGene/reelmark/compare/v0.1.19...v0.1.20
+[0.1.19]: https://github.com/MineGene/reelmark/compare/v0.1.18...v0.1.19
 [0.1.18]: https://github.com/MineGene/reelmark/compare/v0.1.17...v0.1.18
 [0.1.17]: https://github.com/MineGene/reelmark/compare/v0.1.16...v0.1.17
 [0.1.16]: https://github.com/MineGene/reelmark/compare/v0.1.15...v0.1.16
