@@ -10,6 +10,8 @@ struct ListCommands {
     let selection: Set<LibraryModel.Item.ID>
     let fileReady: () -> Void
     let searchAgain: (LibraryModel.Item.ID) -> Void
+    /// Puts the cursor in the toolbar's search field.
+    let find: () -> Void
 }
 
 extension FocusedValues {
@@ -28,6 +30,16 @@ struct ReelmarkCommands: Commands {
             Divider()
             Button("Report a Bug…") { model.report = .bug }
             Button("Request a Feature…") { model.report = .feature }
+        }
+        // Edit › Find › Find… (Command-F) goes to the search field, as in
+        // Finder and Activity Monitor. Replacing the group keeps a single
+        // Command-F in the menus.
+        CommandGroup(replacing: .textEditing) {
+            Menu("Find") {
+                Button("Find…") { list?.find() }
+                    .keyboardShortcut("f")
+                    .disabled(list == nil || model.items.isEmpty)
+            }
         }
         CommandGroup(replacing: .newItem) {
             Button("Add Files…") { model.isImporting = true }
