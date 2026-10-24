@@ -12,7 +12,11 @@
 
 ## Testing
 
-<!-- What CI covers (new or changed tests), and what still needs checking by hand on a Mac. -->
+<!-- What CI covers: new or changed tests. -->
+
+## Check on a Mac
+
+<!-- Anything CI can't verify, as checkboxes, each concrete enough to tick off. They're copied into the release's "Check <version> on a Mac" issue. Leave this empty if there's nothing. -->
 
 ## Checklist
 

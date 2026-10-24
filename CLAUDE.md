@@ -25,7 +25,7 @@ Commits and pull requests are a permanent record for people reading the history 
 - **Subject:** imperative mood, completing "If applied, this commit will…" ("Add Redo to Copy and Move to Library"). About 50 characters, at most 72; capitalised; no full stop.
 - **Body:** after a blank line, wrapped at 72 characters. Describe the problem first, then what the change does about it and why this way. It must make sense to someone who never saw the conversation.
 - **Neutral voice:** no "you", "I", "we", "the user asked", "the maintainer picked" or narration of the session. State the reason itself: "Copies had no way back" rather than "The maintainer asked for undo".
-- **Pull request description:** use the template's sections (Summary, Motivation, Changes, Testing). Link the issue it fixes ("Fixes #12"). Testing says what CI covers and what still needs checking by hand on a Mac.
+- **Pull request description:** use the template's sections (Summary, Motivation, Changes, Testing, Check on a Mac). Link the issue it fixes ("Fixes #12"). Testing says what CI covers; Check on a Mac lists, as `- [ ]` checkboxes, what only a person on a Mac can verify.
 - **Title:** the same rules as a commit subject; it becomes the squash commit's subject.
 
 ## Building and testing
