@@ -52,6 +52,15 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 3. **Check the matches:** the New Name column shows where each file will go. If there's more than one possible match, pick the right one from the menu. To search with a different title, right-click and choose **Search Again…**.
 4. **Copy to Library:** click **Copy to Library**, or **Move to Library** if you've chosen Move in Settings. **Clear** empties the list when you're done (your files aren't touched), and Delete removes just the selected items. Changed your mind? **Edit ▸ Undo** (⌘Z) puts moved files back and sends copies to the Trash, and **Edit ▸ Redo** (⇧⌘Z) files them again.
 
+### Shortcuts and Spotlight
+
+Reelmark adds two actions to the Shortcuts app, which Spotlight can run too:
+
+- **Add Files to Reelmark:** adds video files or download folders, as dragging them in does. Use it in a Finder Quick Action, or a Folder Action on your downloads folder.
+- **Add Matched Files to Library:** waits for the matches, then copies or moves every matched file, as the Copy to Library button does.
+
+They run inside Reelmark, so nothing more leaves your Mac than when you use the window.
+
 ## Privacy
 
 - **Only a title and year leave your Mac:** for example "Severance 2022", sent to TMDB's API. File names, folders and everything else stay on your Mac.
