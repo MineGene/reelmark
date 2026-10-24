@@ -140,7 +140,9 @@ jobs:
           MACOS: ${{ steps.digest.outputs.macos }}
         run: |
           sha=$(cut -d' ' -f1 "build/$NAME.sha256")
-          cat > build/notes.md <<EOF
+          # What's new: the changelog.d entries added since the last release.
+          scripts/changelog.sh notes "$VERSION" > build/notes.md
+          cat >> build/notes.md <<EOF
           Every version is published first as a pre-release, then becomes the stable release once it has been checked on a Mac, usually the following Monday. For the newest checked version, use the [latest release](https://github.com/$GITHUB_REPOSITORY/releases/latest).
 
           ## Install
