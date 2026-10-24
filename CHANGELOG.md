@@ -4,6 +4,10 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 ## [Unreleased]
 
+### Added
+
+- A search field in the toolbar (⌘F) narrows a long list to the files, matches or new names containing what you type.
+
 ## [0.1.16] - 2026-10-24
 
 ### Added

@@ -140,6 +140,28 @@ final class ReelmarkUITests: XCTestCase {
         XCTAssertTrue(eventually { copies().isEmpty }, "A copy of Reelmark kept running")
     }
 
+    /// Command-F goes to the toolbar's search field, and typing narrows the
+    /// list, ignoring case; clearing the field shows everything again.
+    @MainActor
+    func testSearchNarrowsTheList() {
+        let app = launch()
+        waitForItems(Self.all, in: app)
+        app.menuBars.menuBarItems["Edit"].click()
+        XCTAssertTrue(app.menuItems["Find"].exists, "No Find in the Edit menu")
+        app.typeKey(.escape, modifierFlags: [])
+        app.typeKey("f", modifierFlags: .command)
+        app.typeText("copied")
+        waitForItems(Self.copied, in: app)
+        // Select the typed text and delete it.
+        app.typeKey("a", modifierFlags: .command)
+        app.typeKey(.delete, modifierFlags: [])
+        waitForItems(Self.all, in: app)
+        app.typeText("nothing like this")
+        let noResults = app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH 'No Results'"))
+        XCTAssertTrue(noResults.firstMatch.waitForExistence(timeout: 10), "No “No Results” message")
+        assertStillRunning(app)
+    }
+
     @MainActor
     func testListShowsEveryItem() {
         let app = launch()
