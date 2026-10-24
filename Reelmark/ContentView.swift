@@ -23,7 +23,7 @@ struct ContentView: View {
     var body: some View {
         // Filtered once per redraw: a list can hold 100,000 items.
         let shown = shownItems
-        windowContent(shown)
+        dialogs(windowContent(shown))
             // Forget selected rows once they're gone from the list, or hidden
             // by the search, so menu commands never act on rows that can't be
             // seen.
@@ -32,6 +32,15 @@ struct ContentView: View {
             // Select the first of newly added files, as Finder does with
             // pasted ones (the list scrolls to it), unless the search hides it.
             .onChange(of: model.firstAdded) { selectFirstAdded() }
+            // VoiceOver says when slow work finishes, which sighted people see
+            // from the spinner going away.
+            .onChange(of: model.isScanning) { old, new in announceIfFinished(scanning: old, now: new) }
+            .onChange(of: model.isRenaming) { old, new in announceIfFinished(filing: old, now: new) }
+    }
+
+    /// The Report a Bug sheet and the Search Again prompt.
+    private func dialogs(_ content: some View) -> some View {
+        content
             .sheet(isPresented: isShowingReport) {
                 if let kind = model.report { ReportView(kind: kind, model: model) }
             }
@@ -89,6 +98,7 @@ struct ContentView: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dropArea")
+        .accessibilityLabel(model.items.isEmpty ? "Drop files here" : "Files to rename")
     }
 
     private var listCommands: ListCommands? {
@@ -113,6 +123,7 @@ struct ContentView: View {
                 ProgressView()
                     .controlSize(.small)
                     .help("Finding videos in what you added")
+                    .accessibilityLabel("Finding videos")
                 Button("Stop") { model.stopScanning() }
                     .help("Stop searching the folders you added. Nothing found so far is added.")
             }
@@ -130,6 +141,7 @@ struct ContentView: View {
                         ProgressView(value: Double(filing.done), total: Double(max(filing.total, 1)))
                             .progressViewStyle(.circular)
                             .controlSize(.small)
+                            .accessibilityLabel(model.mode == .copy ? "Copying" : "Moving")
                         Text("\(filing.done.formatted()) of \(filing.total.formatted())")
                     }
                 } else {
@@ -193,6 +205,28 @@ struct ContentView: View {
         let total = count == 1 ? "1 item" : "\(count.formatted()) items"
         guard !ListSearch(searchText).isEmpty else { return total }
         return "\(shownCount.formatted()) of \(total)"
+    }
+
+    private func announceIfFinished(scanning was: Bool, now isScanning: Bool) {
+        guard was && !isScanning else { return }
+        let count = itemCount(showing: shownItems.count)
+        announce(count.isEmpty ? "No videos found" : count)
+    }
+
+    private func announceIfFinished(filing was: Bool, now isFiling: Bool) {
+        if was && !isFiling { announce(filingSummary) }
+    }
+
+    /// What VoiceOver says when a Copy or Move to Library finishes.
+    private var filingSummary: String {
+        let done = model.items.count(where: { $0.status == .done })
+        let attention = model.items.count(where: { $0.statusRank == 0 })
+        return attention == 0
+            ? "\(done) in your library" : "\(done) in your library, \(attention) need attention"
+    }
+
+    private func announce(_ text: String) {
+        AccessibilityNotification.Announcement(text).post()
     }
 
     /// Says what will happen, like Finder's Copy and Move: "Copy 3 to Library".

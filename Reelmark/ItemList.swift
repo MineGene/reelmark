@@ -33,6 +33,7 @@ struct ItemList: NSViewRepresentable {
         table.allowsMultipleSelection = true
         table.usesAlternatingRowBackgroundColors = true
         table.columnAutoresizingStyle = .uniformColumnAutoresizingStyle
+        table.setAccessibilityLabel("Files to rename")
         for column in Column.allCases { table.addTableColumn(column.tableColumn) }
         table.dataSource = context.coordinator
         table.delegate = context.coordinator
@@ -72,6 +73,9 @@ struct ItemList: NSViewRepresentable {
             case .newName: column.title = "New Name"
             case .status:
                 column.title = ""
+                // No title fits in so narrow a column, but VoiceOver still names it.
+                column.headerCell.setAccessibilityLabel("Status")
+                column.headerToolTip = "Status"
                 column.width = 24
                 column.resizingMask = []
                 return column
@@ -249,8 +253,10 @@ struct ItemList: NSViewRepresentable {
                 cell.show(
                     "exclamationmark.triangle.fill", color: .systemYellow, label: "Needs attention",
                     help: message)
-            default:
-                cell.show(nil, color: nil, label: nil, help: nil)
+            case .ready:
+                cell.show(nil, color: nil, label: "Ready to file", help: nil)
+            case .pending, .searching:
+                cell.show(nil, color: nil, label: "Looking up", help: nil)
             }
             return cell
         }
@@ -350,6 +356,9 @@ private final class LabelCell: NSTableCellView {
         field.lineBreakMode = truncation
         field.textColor = dimmed ? .secondaryLabelColor : .labelColor
         field.toolTip = help
+        // The cell is what VoiceOver and the accessibility audit see, so it
+        // needs the text as its name (otherwise it's named by its class).
+        setAccessibilityLabel(text)
     }
 }
 
@@ -362,6 +371,7 @@ private final class MenuCell: NSTableCellView {
         popUp.translatesAutoresizingMaskIntoConstraints = false
         popUp.controlSize = .small
         popUp.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        popUp.setAccessibilityLabel("Match")
         addSubview(popUp)
         NSLayoutConstraint.activate([
             popUp.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -381,6 +391,7 @@ private final class MenuCell: NSTableCellView {
         }
         if let selected { popUp.selectItem(withTag: selected) }
         popUp.toolTip = popUp.selectedItem?.toolTip
+        setAccessibilityLabel("Match: \(popUp.titleOfSelectedItem ?? "none")")
         popUp.target = target
         popUp.action = action
     }
@@ -393,6 +404,11 @@ private final class IconCell: NSTableCellView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         icon.translatesAutoresizingMaskIntoConstraints = false
+        // The cell speaks for the icon (as an image, named by its label), so
+        // VoiceOver doesn't find the same icon twice.
+        icon.setAccessibilityElement(false)
+        setAccessibilityElement(true)
+        setAccessibilityRole(.image)
         addSubview(icon)
         NSLayoutConstraint.activate([
             icon.centerXAnchor.constraint(equalTo: centerXAnchor),
@@ -402,10 +418,15 @@ private final class IconCell: NSTableCellView {
 
     required init?(coder: NSCoder) { fatalError("Not used in a storyboard") }
 
-    func show(_ symbol: String?, color: NSColor?, label: String?, help: String?) {
+    func show(_ symbol: String?, color: NSColor?, label: String, help: String?) {
         icon.image = symbol.flatMap { NSImage(systemSymbolName: $0, accessibilityDescription: label) }
+        // An empty icon would be an unnamed image to VoiceOver.
+        icon.isHidden = symbol == nil
         icon.contentTintColor = color
         icon.toolTip = help
-        icon.setAccessibilityHelp(help)
+        setAccessibilityHelp(help)
+        // Every cell is named, even without an icon: a cell left out of
+        // accessibility shows up as an unnamed cell instead.
+        setAccessibilityLabel(label)
     }
 }

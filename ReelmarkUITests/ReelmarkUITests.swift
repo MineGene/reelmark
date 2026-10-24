@@ -88,6 +88,46 @@ final class ReelmarkUITests: XCTestCase {
         }
     }
 
+    /// Xcode's accessibility audit (the checks Accessibility Inspector runs:
+    /// descriptions, contrast, hit areas, text sizes and more) on the empty
+    /// window and on a filled list. Every issue is listed, then the test
+    /// fails once if there are any.
+    ///
+    /// Skipped, because they belong to macOS rather than to Reelmark:
+    /// - contrast: Reelmark uses only the system's own text colours (no
+    ///   custom colours, see CLAUDE.md), which macOS sets and adjusts for
+    ///   Increase Contrast, so the audit's contrast results are Apple's;
+    /// - containers macOS adds itself (SwiftUI's unnamed groups, the Touch Bar)
+    ///   and the hover help tag macOS draws for a tooltip.
+    @MainActor
+    func testWindowPassesTheAccessibilityAudit() throws {
+        var issues: [String] = []
+        for withItems in [false, true] {
+            let app = launch(withItems: withItems)
+            if withItems {
+                waitForItems(Self.all, in: app)
+            } else {
+                let emptyState = app.staticTexts["Drag Movies and TV Episodes Here"]
+                XCTAssertTrue(emptyState.waitForExistence(timeout: 10))
+            }
+            try app.performAccessibilityAudit { issue in
+                let element = issue.element
+                let isContrast = issue.auditType == .contrast
+                let isSystemContainer =
+                    issue.auditType == .sufficientElementDescription
+                    && [.group, .touchBar, .helpTag].contains(element?.elementType)
+                    && (element?.identifier ?? "").isEmpty
+                if !isContrast && !isSystemContainer {
+                    let window = withItems ? "list" : "empty window"
+                    issues.append("\(window): \(issue.compactDescription): \(element.map { "\($0)" } ?? "-")")
+                }
+                return true
+            }
+            app.terminate()
+        }
+        XCTAssertTrue(issues.isEmpty, "Accessibility audit:\n" + issues.joined(separator: "\n"))
+    }
+
     /// Help › Report a Bug… previews what would be shared and offers to open
     /// it in the browser. The test cancels rather than opening a browser.
     @MainActor
