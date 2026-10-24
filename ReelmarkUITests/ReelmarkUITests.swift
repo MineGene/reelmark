@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 
 /// Launches the real app and uses it the way a person would, so anything
@@ -104,9 +105,15 @@ final class ReelmarkUITests: XCTestCase {
         app.open(file)
         XCTAssertTrue(item(name, in: app).waitForExistence(timeout: 10), "The opened file wasn't added")
         assertStillRunning(app)
-        // macOS launched this copy to open the file, outside the test's own
-        // launch, so quit it: left running, the next tests found it instead.
+        // macOS may launch a second copy to open the file, outside the test's
+        // own launch, which app.terminate() doesn't reach. Quit every copy:
+        // one left running was found by the next tests instead.
         app.terminate()
+        let copies = {
+            NSRunningApplication.runningApplications(withBundleIdentifier: "com.minegene.reelmark")
+        }
+        copies().forEach { $0.forceTerminate() }
+        XCTAssertTrue(eventually { copies().isEmpty }, "A copy of Reelmark kept running")
     }
 
     @MainActor
