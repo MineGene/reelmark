@@ -105,8 +105,10 @@ reviews:
     swiftlint:
       enabled: false
 
+# CodeRabbit answers only when asked with @coderabbitai, so a session's
+# "fixed in …" reply on a thread doesn't start a back-and-forth.
 chat:
-  auto_reply: true
+  auto_reply: false
 
 knowledge_base:
   code_guidelines:
