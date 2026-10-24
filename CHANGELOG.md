@@ -6,6 +6,7 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 ### Added
 
+- While copying or moving, the toolbar and the Dock icon show how many files are done, the Mac stays awake until the last one, and the Dock icon bounces once when it finishes in the background.
 - Two actions for the Shortcuts app and Spotlight: **Add Files to Reelmark**, and **Add Matched Files to Library**, which waits for the matches and then files them.
 - **Help › Report a Bug…** and **Request a Feature…** show what would be shared, then open a pre-filled GitHub issue in your browser. Nothing is sent unless you submit it, and file names, folders and tokens are never included.
 - Videos and download folders can be dropped on Reelmark's Dock icon, opened with Finder's **Open With › Reelmark**, or added with Finder's **Services › Add to Reelmark**. Right-clicking the Dock icon offers **Add Files…**.

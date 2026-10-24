@@ -58,7 +58,11 @@ final class LibraryModel {
     static let shared = LibraryModel.forLaunch()
 
     private(set) var items: [Item] = []
-    private(set) var isRenaming = false
+    /// How far the current Copy, Move, Undo or Redo has got, for the
+    /// toolbar; nil when none is running.
+    private(set) var filing: FilingProgress?
+    var isRenaming: Bool { filing != nil }
+    private let activity = FilingActivity()
     /// True while dropped folders are still being searched for videos.
     private(set) var isScanning = false
     var isImporting = false
@@ -356,9 +360,10 @@ final class LibraryModel {
     /// batch can then be reversed with Edit ▸ Undo (Command-Z) and repeated
     /// with Edit ▸ Redo (Shift-Command-Z), as in Finder.
     func renameReady(undoManager: UndoManager?) async {
-        guard !isRenaming else { return }
-        isRenaming = true
-        defer { isRenaming = false }
+        let ready = items.filter({ $0.status == .ready }).map(\.id)
+        guard !isRenaming, !ready.isEmpty else { return }
+        beginFiling(ready.count)
+        defer { endFiling() }
         let mode = self.mode
         var done: [Transfer] = []
         defer {
@@ -368,7 +373,8 @@ final class LibraryModel {
             }
         }
 
-        for id in items.filter({ $0.status == .ready }).map(\.id) {
+        for id in ready {
+            defer { stepFiling() }
             guard let index = index(of: id),
                 let match = items[index].match, let path = items[index].newPath
             else { continue }
@@ -416,6 +422,26 @@ final class LibraryModel {
         let createdFolder: URL?
     }
 
+    struct FilingProgress: Equatable {
+        var done: Int
+        let total: Int
+    }
+
+    private func beginFiling(_ total: Int) {
+        filing = FilingProgress(done: 0, total: total)
+        activity.start(total: total)
+    }
+
+    private func stepFiling() {
+        filing?.done += 1
+        activity.update(done: filing?.done ?? 0)
+    }
+
+    private func endFiling() {
+        filing = nil
+        activity.finish()
+    }
+
     // Undo and redo. Each handler registers its opposite straight away (that's
     // how UndoManager tells an undo from a redo), then does the file work in
     // a task, since moving files back from another drive can take a while.
@@ -446,11 +472,12 @@ final class LibraryModel {
     /// the list are ready to file again.
     private func reverse(_ batch: Batch) async {
         guard !isRenaming else { return }
-        isRenaming = true
-        defer { isRenaming = false }
+        beginFiling(batch.transfers.count)
+        defer { endFiling() }
 
         let mode = batch.mode
         for transfer in batch.transfers.reversed() {
+            defer { stepFiling() }
             let hasAccess = transfer.library.startAccessingSecurityScopedResource()
             let result = await Task.detached { () -> Result<Void, Error> in
                 Result {
@@ -474,11 +501,12 @@ final class LibraryModel {
     /// succeed are kept for the next undo.
     private func repeatTransfers(_ batch: Batch) async {
         guard !isRenaming else { return }
-        isRenaming = true
-        defer { isRenaming = false }
+        beginFiling(batch.transfers.count)
+        defer { endFiling() }
 
         var done: [Transfer] = []
         for old in batch.transfers {
+            defer { stepFiling() }
             if let created = await transfer(
                 id: old.id, old.source, to: old.destination, in: old.library, mode: batch.mode)
             {

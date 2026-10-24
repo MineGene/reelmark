@@ -23,6 +23,7 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 - **Movies and TV:** handles episodes, seasons and multi-episode files (`S01E01-E02`), including season folders like `Show/Season 2/Episode 03.mkv`.
 - **You stay in control:** check every match before anything happens, choose a different match from a list, or search again by hand.
 - **Copy or move:** Copy is the default, so your torrent client can keep seeding. On the same drive, a copy takes no extra space.
+- **Long copies:** progress shows in the toolbar and on the Dock icon, the Mac stays awake until it's done, and the Dock icon bounces when it finishes in the background.
 - **Safe:** never overwrites and never deletes anything. Edit ▸ Undo reverses the last Copy or Move, as in Finder.
 - **Nothing to set up:** no account, sign-in or API key needed.
 - **A real Mac app:** standard macOS controls, light and dark mode, VoiceOver, and a Liquid Glass icon.
