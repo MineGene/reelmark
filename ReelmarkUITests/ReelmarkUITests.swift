@@ -202,6 +202,67 @@ final class ReelmarkUITests: XCTestCase {
         assertStillRunning(app)
     }
 
+    /// Edit › Find › Find… goes to the search field like Command-F; the
+    /// subtitle counts what the search shows, and Escape clears the field.
+    @MainActor
+    func testFindMenuSearchesAndEscapeClears() {
+        let app = launch()
+        waitForItems(Self.all, in: app)
+        XCTAssertTrue(app.staticTexts["4 items"].waitForExistence(timeout: 10), "No item count")
+        app.menuBars.menuBarItems["Edit"].click()
+        app.menuItems["Find"].hover()
+        let find = app.menuItems["Find…"]
+        XCTAssertTrue(find.waitForExistence(timeout: 5), "No Edit › Find › Find…")
+        find.click()
+        app.typeText("copied")
+        waitForItems(Self.copied, in: app)
+        XCTAssertTrue(app.staticTexts["2 of 4 items"].waitForExistence(timeout: 10), "No “2 of 4 items”")
+        app.typeKey(.escape, modifierFlags: [])
+        waitForItems(Self.all, in: app)
+        XCTAssertTrue(app.staticTexts["4 items"].waitForExistence(timeout: 10), "The count didn't come back")
+        assertStillRunning(app)
+    }
+
+    /// What VoiceOver reads for the list: each column's name, and the status
+    /// icons by what they mean rather than by their symbol.
+    @MainActor
+    func testListReadsColumnsAndStatusesToVoiceOver() {
+        let app = launch()
+        waitForItems(Self.all, in: app)
+        for column in ["Downloaded File", "Match", "New Name", "Status"] {
+            let header = app.descendants(matching: .any)
+                .matching(NSPredicate(format: "label == %@ OR title == %@", column, column)).firstMatch
+            XCTAssertTrue(header.exists, "No \(column) column header for VoiceOver")
+        }
+        let statuses = [("In your library", 2), ("Needs attention", 1), ("Ready to file", 1)]
+        for (label, count) in statuses {
+            let icons = app.images.matching(NSPredicate(format: "label == %@", label))
+            XCTAssertTrue(
+                eventually { icons.count == count }, "Expected \(count) “\(label)” icons, not \(icons.count)")
+        }
+    }
+
+    /// Help › Request a Feature… previews the same details, and Copy puts
+    /// them on the clipboard, without file names.
+    @MainActor
+    func testRequestAFeatureCopiesTheDetails() {
+        let app = launch()
+        waitForItems(Self.all, in: app)
+        NSPasteboard.general.clearContents()
+        app.menuBars.menuBarItems["Help"].click()
+        app.menuItems["Request a Feature…"].click()
+        let title = app.staticTexts["Request a Feature"]
+        XCTAssertTrue(title.waitForExistence(timeout: 10), "The preview didn't open")
+        app.buttons["Copy"].firstMatch.click()
+        let copied = { NSPasteboard.general.string(forType: .string) ?? "" }
+        XCTAssertTrue(
+            eventually { copied().hasPrefix("- Reelmark: ") }, "Copy didn't copy the details: \(copied())")
+        XCTAssertTrue(copied().contains("4 items"), "The copied details don't summarise the list")
+        XCTAssertFalse(copied().contains(Self.ready), "The copied details include a file name")
+        app.typeKey(.escape, modifierFlags: [])
+        assertStillRunning(app)
+    }
+
     @MainActor
     func testListShowsEveryItem() {
         let app = launch()
