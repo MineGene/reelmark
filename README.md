@@ -52,6 +52,23 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 3. **Check the matches:** the New Name column shows where each file will go. If there's more than one possible match, pick the right one from the menu. To search with a different title, right-click and choose **Search Again…**.
 4. **Copy to Library:** click **Copy to Library**, or **Move to Library** if you've chosen Move in Settings. **Clear** empties the list when you're done (your files aren't touched), and Delete removes just the selected items. Changed your mind? **Edit ▸ Undo** (⌘Z) puts moved files back and sends copies to the Trash, and **Edit ▸ Redo** (⇧⌘Z) files them again.
 
+### Keyboard shortcuts
+
+| Shortcut | Does |
+| --- | --- |
+| ⌘O | Add Files… |
+| ⌘Return | Copy (or Move) to Library |
+| ⌘R | Search Again… for the selected item |
+| ⇧⌘R | Show the selected items in Finder |
+| Delete or ⌘Delete | Remove the selected items from the list |
+| ⌥⌘Delete | Clear the whole list |
+| ⌘. | Stop adding files from a big folder |
+| ⌘Z / ⇧⌘Z | Undo or redo the last Copy or Move to Library |
+| ⌘A | Select everything in the list |
+| ⌘, | Settings |
+
+They're all in the File menu too, and right-clicking an item offers Search Again…, Show in Finder and Remove from List.
+
 ## Privacy
 
 - **Only a title and year leave your Mac:** for example "Severance 2022", sent to TMDB's API. File names, folders and everything else stay on your Mac.
