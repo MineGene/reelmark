@@ -40,6 +40,16 @@ final class ReelmarkLargeListTests: XCTestCase {
         }
         XCTAssertTrue(app.staticTexts["10,000 items"].waitForExistence(timeout: 10))
 
+        // Searching all 10,000 as you type: one episode is left, and
+        // clearing the field brings back the whole list.
+        app.typeKey("f", modifierFlags: .command)
+        app.typeText("S01E01")
+        XCTAssertTrue(
+            app.staticTexts["1 of 10,000 items"].waitForExistence(timeout: 10), "Search was slow or wrong")
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(
+            app.staticTexts["10,000 items"].waitForExistence(timeout: 10), "Clearing the search was slow")
+
         // Sort all 10,000 one way and then the other.
         let header = app.buttons["Downloaded File"].firstMatch
         XCTAssertTrue(header.waitForExistence(timeout: 10))
