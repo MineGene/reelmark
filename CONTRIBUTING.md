@@ -41,8 +41,9 @@ The *Commit privacy* check enforces the email and trailer rules on every pull re
 ## Workflow
 
 1. Branch from `main`; one change per pull request.
-2. Push and open a pull request. CI builds the app, runs the tests, checks permissions, web addresses and commit privacy, and runs CodeQL. Nothing needs a Mac except trying the app.
-3. The maintainer's pull requests (including Claude's) are squash-merged automatically once every required check passes: auto-merge is turned on as each one is opened. Pull requests from forks and Dependabot are merged by hand. The maintainer can still review, hold (turn off auto-merge) or close any pull request.
+2. Write commit messages the way Git itself asks: a short subject in the imperative ("Fix crash when clearing the list"), a blank line, then what the problem was and why this fixes it. Fill in the pull request template's sections. The history should make sense to someone who reads it years later.
+3. Push and open a pull request. CI builds the app, runs the tests, checks permissions, web addresses and commit privacy, and runs CodeQL. Nothing needs a Mac except trying the app.
+4. The maintainer's pull requests (including Claude's) are squash-merged automatically once every required check passes: auto-merge is turned on as each one is opened. Pull requests from forks and Dependabot are merged by hand. The maintainer can still review, hold (turn off auto-merge) or close any pull request.
 
 `main` is protected: no direct pushes, force pushes or deletions.
 
@@ -56,11 +57,17 @@ scripts/check-app.sh build/Release/Reelmark.app
 swift test --package-path Packages/ReelmarkCore
 ```
 
+## Trying the app by hand
+
+`scripts/make-test-downloads.sh` makes a folder of empty files named like downloads: free-to-show films for screenshots, and made-up names that try to break things (thousands of episodes, odd names, files that must be skipped, link loops). Reelmark only reads file names, so empty files behave exactly like real ones. Run it with `--help` for options.
+
 ## Rules the code must keep
 
 See the "Rules the design depends on" section of `CLAUDE.md`: what may be sent and where, the fixed entitlements, never overwriting or deleting, the built-in token and the Keychain for a person's own, a tiny memory footprint, Apple's standard controls, and no third-party code.
 
 ## Releases
+
+What changed in each version is recorded in [CHANGELOG.md](CHANGELOG.md), in the [Keep a Changelog](https://keepachangelog.com) format. If your change affects what people see or can do, add a line under **Unreleased**.
 
 Releases are automatic. As soon as a change to the app is merged into `main`, the *Release* workflow tests, builds and publishes the next patch version (0.1.1, 0.1.2, …) as a DMG with its checksum and build attestation, then verifies the download and rebuilds it from source on a fresh machine. Changes to docs, tests or CI alone don't make a release. A nightly run also checks `main`, in case a merge didn't start one.
 

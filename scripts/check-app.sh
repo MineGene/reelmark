@@ -30,6 +30,16 @@ icon=$(plutil -extract CFBundleIconName raw "$app/Contents/Info.plist" 2>/dev/nu
 [ -n "$icon" ] && [ -f "$app/Contents/Resources/Assets.car" ] || fail "The app has no icon"
 echo "$icon"
 
+echo "== Privacy manifest"
+# Apple's standard declaration (Reelmark/PrivacyInfo.xcprivacy): no
+# tracking and no data collected.
+manifest="$app/Contents/Resources/PrivacyInfo.xcprivacy"
+[ -f "$manifest" ] || fail "The app has no privacy manifest"
+[ "$(plutil -extract NSPrivacyTracking raw "$manifest")" = "false" ] || fail "The privacy manifest declares tracking"
+[ "$(plutil -extract NSPrivacyCollectedDataTypes json -o - "$manifest")" = "[]" ] \
+  || fail "The privacy manifest declares collected data"
+echo "No tracking, no data collected"
+
 echo "== Signature"
 codesign --verify --deep --strict --verbose=2 "$app"
 # Capture first: piping into "grep -q" lets grep exit early, codesign then

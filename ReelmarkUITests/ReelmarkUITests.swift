@@ -104,6 +104,62 @@ final class ReelmarkUITests: XCTestCase {
     }
 
     @MainActor
+    func testCommandDeleteRemovesTheSelectedItem() {
+        let app = launch()
+        waitForItems(Self.all, in: app)
+        item(Self.unmatched, in: app).click()
+        app.typeKey(.delete, modifierFlags: .command)
+        waitForItems([Self.ready] + Self.copied, in: app)
+        assertStillRunning(app)
+    }
+
+    @MainActor
+    func testCommandROpensSearchAgainForTheSelectedItem() {
+        let app = launch()
+        waitForItems(Self.all, in: app)
+        item(Self.unmatched, in: app).click()
+        app.typeKey("r", modifierFlags: .command)
+        XCTAssertTrue(app.staticTexts["Search The Movie Database"].waitForExistence(timeout: 10))
+        // Command-Delete must not reach the list while the sheet's text field is in use.
+        app.typeKey(.delete, modifierFlags: .command)
+        // Escape is Cancel. (Clicking "Cancel" can hit the Touch Bar's copy
+        // of the button, which UI tests can't click.)
+        app.typeKey(.escape, modifierFlags: [])
+        let title = app.staticTexts["Search The Movie Database"]
+        XCTAssertTrue(eventually { !title.exists }, "The sheet didn't close")
+        waitForItems(Self.all, in: app)
+        assertStillRunning(app)
+    }
+
+    @MainActor
+    func testFileMenuOffersTheListCommands() {
+        let app = launch()
+        waitForItems(Self.all, in: app)
+        item(Self.ready, in: app).click()
+        app.menuBars.menuBarItems["File"].click()
+        for name in [
+            "Add Files…", "Copy to Library", "Search Again…", "Show in Finder", "Remove from List",
+            "Clear List",
+        ] {
+            XCTAssertTrue(app.menuItems[name].exists, "No \(name) in the File menu")
+        }
+        XCTAssertTrue(app.menuItems["Copy to Library"].isEnabled)
+        app.menuItems["Clear List"].click()
+        XCTAssertTrue(app.staticTexts["Drag Movies and TV Episodes Here"].waitForExistence(timeout: 10))
+        assertStillRunning(app)
+    }
+
+    @MainActor
+    func testRightClickOffersShowInFinder() {
+        let app = launch()
+        waitForItems(Self.all, in: app)
+        item(Self.ready, in: app).rightClick()
+        XCTAssertTrue(app.menuItems["Show in Finder"].waitForExistence(timeout: 10))
+        app.typeKey(.escape, modifierFlags: [])
+        assertStillRunning(app)
+    }
+
+    @MainActor
     func testClearEmptiesTheWholeList() {
         let app = launch()
         waitForItems(Self.all, in: app)
