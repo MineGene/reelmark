@@ -16,7 +16,7 @@
 
 ## Check on a Mac
 
-<!-- Anything CI can't verify, as checkboxes, each concrete enough to tick off. They're copied into the release's "Check <version> on a Mac" issue. Leave this empty if there's nothing. -->
+<!-- Only what CI can't verify (a real drag from Finder, chosen library folders, Gatekeeper on first launch, how something looks or sounds). Anything a UI test, unit test or script can check is a test instead. One checkbox per item, concrete enough to tick off, ending with why it needs a person, e.g. "- [ ] Dragging a folder from Finder adds its videos (real Finder drag)". They're copied into the release's "Check <version> on a Mac" issue. Leave this empty if there's nothing. -->
 
 ## Checklist
 
