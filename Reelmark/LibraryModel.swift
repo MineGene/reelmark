@@ -85,6 +85,8 @@ final class LibraryModel {
     /// Dropped or opened items the sandbox lets us use until the list is cleared.
     @ObservationIgnored private var accessGranted: [URL] = []
     @ObservationIgnored private var lookup: Task<Void, Never>?
+    /// The window's undo history, which holds the last Copy or Move to Library.
+    @ObservationIgnored private weak var undoManager: UndoManager?
 
     // Big drops (tens of thousands of files) stay quick: items are found by
     // ID through an index rather than by searching the list, and lookups
@@ -163,6 +165,8 @@ final class LibraryModel {
         cache = [:]
         for url in accessGranted { url.stopAccessingSecurityScopedResource() }
         accessGranted = []
+        // Undo needs the files' access, just given up, to move them back.
+        undoManager?.removeAllActions(withTarget: self)
     }
 
     /// Rebuilds the ID index after items are added or removed. (Changing an
@@ -276,12 +280,24 @@ final class LibraryModel {
 
     // MARK: - Filing
 
-    /// Moves or copies every matched file into its library folder.
-    func renameReady() async {
+    /// One file Reelmark put in the library, kept so Edit ▸ Undo can reverse it.
+    struct Transfer: Sendable {
+        let id: Item.ID
+        let source: URL
+        let destination: URL
+        let library: URL
+        let createdFolder: URL?
+    }
+
+    /// Moves or copies every matched file into its library folder. The whole
+    /// batch can then be reversed with Edit ▸ Undo (Command-Z), as in Finder.
+    func renameReady(undoManager: UndoManager?) async {
         guard !isRenaming else { return }
         isRenaming = true
         defer { isRenaming = false }
         let mode = self.mode
+        var done: [Transfer] = []
+        defer { registerUndo(of: done, mode: mode, with: undoManager) }
 
         for id in items.filter({ $0.status == .ready }).map(\.id) {
             guard let index = index(of: id),
@@ -298,18 +314,64 @@ final class LibraryModel {
             let destination = library.appending(path: path)
             let hasAccess = library.startAccessingSecurityScopedResource()
             // Off the main thread: a copy to another drive can take minutes.
-            let failure = await Task.detached { () -> String? in
-                do {
-                    try MediaFiles.transfer(source, to: destination, mode: mode)
-                    return nil
-                } catch {
-                    return error.localizedDescription
-                }
+            let result = await Task.detached { () -> Result<URL?, Error> in
+                Result { try MediaFiles.transfer(source, to: destination, mode: mode) }
             }.value
             if hasAccess { library.stopAccessingSecurityScopedResource() }
 
+            if case .success(let created) = result {
+                done.append(
+                    Transfer(
+                        id: id, source: source, destination: destination, library: library,
+                        createdFolder: created))
+            }
             if let current = self.index(of: id) {
-                items[current].status = failure.map { Item.Status.failed($0) } ?? .done
+                switch result {
+                case .success: items[current].status = .done
+                case .failure(let error): items[current].status = .failed(error.localizedDescription)
+                }
+            }
+        }
+    }
+
+    private func registerUndo(
+        of transfers: [Transfer], mode: MediaFiles.TransferMode, with undoManager: UndoManager?
+    ) {
+        guard let undoManager, !transfers.isEmpty else { return }
+        self.undoManager = undoManager
+        undoManager.registerUndo(withTarget: self) { model in
+            MainActor.assumeIsolated {
+                Task { await model.undo(transfers, mode: mode) }
+            }
+        }
+        undoManager.setActionName(mode == .copy ? "Copy to Library" : "Move to Library")
+    }
+
+    /// Reverses a Copy or Move to Library, newest file first so folders
+    /// Reelmark created are empty again by the time they're checked. Moved
+    /// files go back where they were; copies go to the Trash. Items still in
+    /// the list are ready to file again.
+    private func undo(_ transfers: [Transfer], mode: MediaFiles.TransferMode) async {
+        guard !isRenaming else { return }
+        isRenaming = true
+        defer { isRenaming = false }
+
+        for transfer in transfers.reversed() {
+            let hasAccess = transfer.library.startAccessingSecurityScopedResource()
+            let result = await Task.detached { () -> Result<Void, Error> in
+                Result {
+                    try MediaFiles.undoTransfer(
+                        transfer.source, to: transfer.destination, mode: mode,
+                        createdFolder: transfer.createdFolder)
+                }
+            }.value
+            if hasAccess { transfer.library.stopAccessingSecurityScopedResource() }
+
+            if let current = index(of: transfer.id) {
+                switch result {
+                case .success: items[current].status = .ready
+                case .failure(let error): items[current].status = .failed(error.localizedDescription)
+                }
             }
         }
     }

@@ -6,6 +6,7 @@ import SwiftUI
 /// (materials, toolbar, light and dark, accessibility) without custom styling.
 struct ContentView: View {
     @Environment(LibraryModel.self) private var model
+    @Environment(\.undoManager) private var undoManager
     @State private var selection = Set<LibraryModel.Item.ID>()
     @State private var searchingFor: LibraryModel.Item.ID?
     @State private var searchTitle = ""
@@ -74,7 +75,7 @@ struct ContentView: View {
                     .help("Remove everything from this list. Your files aren't changed.")
             }
             Button {
-                Task { await model.renameReady() }
+                Task { await model.renameReady(undoManager: undoManager) }
             } label: {
                 if model.isRenaming {
                     ProgressView().controlSize(.small)
