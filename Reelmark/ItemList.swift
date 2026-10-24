@@ -17,6 +17,8 @@ struct ItemList: NSViewRepresentable {
     typealias Item = LibraryModel.Item
 
     let model: LibraryModel
+    /// The items to show: all of the model's, or those the search finds.
+    let items: [Item]
     @Binding var selection: Set<Item.ID>
     let onSearch: (Item.ID) -> Void
 
@@ -49,7 +51,7 @@ struct ItemList: NSViewRepresentable {
 
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         context.coordinator.parent = self
-        context.coordinator.show(model.items, selection: selection)
+        context.coordinator.show(items, selection: selection)
     }
 
     // MARK: - Columns
@@ -128,7 +130,7 @@ struct ItemList: NSViewRepresentable {
 
         func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor])
         {
-            show(parent.model.items, selection: parent.selection)
+            show(parent.items, selection: parent.selection)
         }
 
         func tableViewSelectionDidChange(_ notification: Notification) {

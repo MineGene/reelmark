@@ -11,14 +11,23 @@ struct ContentView: View {
     @State private var selection = Set<LibraryModel.Item.ID>()
     @State private var searchingFor: LibraryModel.Item.ID?
     @State private var searchTitle = ""
+    /// The toolbar's search field, which narrows the list as in Activity
+    /// Monitor. It only hides rows: Copy to Library still files every match.
+    @State private var searchText = ""
+    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         @Bindable var model = model
+        // Filtered once per redraw: a list can hold 100,000 items.
+        let shown = shownItems
         Group {
             if model.items.isEmpty {
                 EmptyState(model: model)
             } else {
-                ItemList(model: model, selection: $selection, onSearch: searchAgain)
+                ItemList(model: model, items: shown, selection: $selection, onSearch: searchAgain)
+                    .overlay {
+                        if shown.isEmpty { ContentUnavailableView.search(text: searchText) }
+                    }
             }
         }
         // Fill the window, so a drop anywhere in it counts, not just on the
@@ -28,7 +37,9 @@ struct ContentView: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dropArea")
         .toolbar { toolbar }
-        .navigationSubtitle(itemCount)
+        .searchable(text: $searchText, placement: .toolbar, prompt: "Search")
+        .searchFocused($isSearchFocused)
+        .navigationSubtitle(itemCount(showing: shown.count))
         // The menu bar's commands (see Commands.swift), offered only while no
         // sheet is open.
         .focusedSceneValue(
@@ -36,11 +47,15 @@ struct ContentView: View {
             searchingFor == nil
                 ? ListCommands(
                     model: model, selection: selection, fileReady: fileReady,
-                    searchAgain: searchAgain)
+                    searchAgain: searchAgain, find: { isSearchFocused = true })
                 : nil)
-        // Forget selected rows once they're gone from the list.
+        // Forget selected rows once they're gone from the list, or hidden by
+        // the search, so menu commands never act on rows that can't be seen.
         .onChange(of: model.items.count) {
-            selection.formIntersection(model.items.map(\.id))
+            selection.formIntersection(shownItems.map(\.id))
+        }
+        .onChange(of: searchText) {
+            selection.formIntersection(shownItems.map(\.id))
         }
         .dropDestination(for: URL.self) { urls, _ in
             model.add(urls)
@@ -134,11 +149,21 @@ struct ContentView: View {
         searchingFor = id
     }
 
-    /// "1,234 items" under the window title, so a long list's size is clear.
-    private var itemCount: String {
+    /// The items the search finds, or all of them when nothing is typed.
+    private var shownItems: [LibraryModel.Item] {
+        let search = ListSearch(searchText)
+        guard !search.isEmpty else { return model.items }
+        return model.items.filter { search.matches([$0.fileName, $0.matchName, $0.newName]) }
+    }
+
+    /// "1,234 items" under the window title, so a long list's size is clear,
+    /// or "3 of 1,234 items" while searching.
+    private func itemCount(showing shownCount: Int) -> String {
         let count = model.items.count
         guard count > 0 else { return "" }
-        return count == 1 ? "1 item" : "\(count.formatted()) items"
+        let total = count == 1 ? "1 item" : "\(count.formatted()) items"
+        guard !ListSearch(searchText).isEmpty else { return total }
+        return "\(shownCount.formatted()) of \(total)"
     }
 
     /// Says what will happen, like Finder's Copy and Move: "Copy 3 to Library".
