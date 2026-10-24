@@ -24,3 +24,8 @@ body:
       label: Example file name (if it's about matching or naming)
       description: A made-up name in the same style is fine.
       placeholder: Show.Name.S01E02.1080p.WEB.H264-GROUP.mkv
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Details from Reelmark
+      description: Filled in when you use Help › Request a Feature… in Reelmark. It never includes file names, folders or tokens.

@@ -87,7 +87,8 @@ They run inside Reelmark, so nothing more leaves your Mac than when you use the 
 ## Privacy
 
 - **Only a title and year leave your Mac:** for example "Severance 2022", sent to TMDB's API. File names, folders and everything else stay on your Mac.
-- **Nothing collected:** no analytics, no crash reporting, no update checks, and nothing about your files is logged or saved.
+- **Nothing collected:** no analytics, no automatic crash reporting, no update checks, and nothing about your files is logged or saved.
+- **Bug reports are yours to send:** **Help › Report a Bug…** shows exactly what it would share (versions, your Mac's model, settings, how many items are in the list, and summaries of recent crashes) and opens a pre-filled GitHub issue in your browser only if you choose to. File names, folders and tokens are never included.
 - **Sandboxed:** Reelmark can only touch the files you add and the two library folders you choose.
 - **Declared the standard way:** Reelmark includes Apple's privacy manifest, which states that it doesn't track you and collects no data.
 - **Checked automatically:** every build is tested for the exact permissions and for TMDB being the only web address in the app.

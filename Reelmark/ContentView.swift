@@ -52,6 +52,11 @@ struct ContentView: View {
         ) { result in
             if case .success(let urls) = result { model.add(urls) }
         }
+        .sheet(
+            isPresented: Binding(get: { model.report != nil }, set: { if !$0 { model.report = nil } })
+        ) {
+            if let kind = model.report { ReportView(kind: kind, model: model) }
+        }
         .alert(
             "Search The Movie Database",
             isPresented: Binding(get: { searchingFor != nil }, set: { if !$0 { searchingFor = nil } })
