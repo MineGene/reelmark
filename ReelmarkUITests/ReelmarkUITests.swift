@@ -71,6 +71,22 @@ final class ReelmarkUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Add Files…"].exists)
     }
 
+    /// Files can be dropped anywhere in the window, empty or not, so the drop
+    /// area must fill everything below the toolbar.
+    @MainActor
+    func testDropAreaFillsTheWindow() {
+        for withItems in [false, true] {
+            let app = launch(withItems: withItems)
+            let window = app.windows.firstMatch
+            let dropArea = app.descendants(matching: .any)["dropArea"].firstMatch
+            XCTAssertTrue(dropArea.waitForExistence(timeout: 10))
+            XCTAssertEqual(dropArea.frame.width, window.frame.width, accuracy: 2)
+            // Everything but the toolbar, which is well under 120 points.
+            XCTAssertGreaterThan(dropArea.frame.height, window.frame.height - 120)
+            app.terminate()
+        }
+    }
+
     @MainActor
     func testListShowsEveryItem() {
         let app = launch()
