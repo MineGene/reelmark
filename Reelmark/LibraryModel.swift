@@ -459,6 +459,14 @@ final class LibraryModel {
         batch.transfers = done
     }
 
+    /// The library folders that matched items are waiting for, Movies first.
+    var missingFolders: [Match.Kind] {
+        let kinds = Set(items.filter { $0.status == .ready }.compactMap { $0.match?.kind })
+        return [Match.Kind.movie, .show].filter {
+            kinds.contains($0) && ($0 == .movie ? moviesFolder : showsFolder) == nil
+        }
+    }
+
     /// Shows the items in Finder, selected: a file already in the library
     /// where it is now, anything else where it was downloaded.
     func showInFinder(_ ids: Set<Item.ID>) {

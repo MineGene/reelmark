@@ -36,7 +36,7 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 
 ## Install
 
-1. Download the DMG from the [latest release](https://github.com/MineGene/reelmark/releases/latest), open it and drag Reelmark to Applications.
+1. Download the DMG from the [latest release](https://github.com/MineGene/reelmark/releases/latest), open it and drag Reelmark to Applications. (Newer versions marked *Pre-release* on the Releases page haven't been checked on a Mac yet; the latest release has.)
 2. Reelmark is free and isn't notarised by Apple (that needs a paid developer account), so macOS blocks it until you say you trust this copy. Open **Terminal**, run this once, then open Reelmark as usual:
 
    ```sh
@@ -47,7 +47,7 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 
 ## Using Reelmark
 
-1. **Choose your library folders:** open **Reelmark › Settings** and choose your Jellyfin Movies and Shows folders. You only need to do this once.
+1. **Choose your library folders:** the first time you copy, Reelmark asks for your Jellyfin Movies or Shows folder. You can change them any time in **Reelmark › Settings**.
 2. **Add downloads:** drag video files or whole download folders into the window, or click **Add Files** (⌘O). Reelmark looks up each one on TMDB.
 3. **Check the matches:** the New Name column shows where each file will go. If there's more than one possible match, pick the right one from the menu. To search with a different title, right-click and choose **Search Again…**.
 4. **Copy to Library:** click **Copy to Library**, or **Move to Library** if you've chosen Move in Settings. **Clear** empties the list when you're done (your files aren't touched), and Delete removes just the selected items. Changed your mind? **Edit ▸ Undo** (⌘Z) puts moved files back and sends copies to the Trash, and **Edit ▸ Redo** (⇧⌘Z) files them again.
@@ -77,6 +77,12 @@ Reelmark adds two actions to the Shortcuts app, which Spotlight can run too:
 - **Add Matched Files to Library:** waits for the matches, then copies or moves every matched file, as the Copy to Library button does.
 
 They run inside Reelmark, so nothing more leaves your Mac than when you use the window.
+
+### From Finder and the Dock
+
+- Drop videos or download folders on Reelmark's Dock icon, or choose **Open With › Reelmark** in Finder. Reelmark never becomes the default app for your videos.
+- Select files or folders in Finder, then right-click and choose **Services › Add to Reelmark**.
+- Right-click Reelmark's Dock icon for **Add Files…**.
 
 ## Privacy
 
