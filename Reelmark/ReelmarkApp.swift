@@ -64,10 +64,7 @@ struct ReelmarkApp: App {
             CommandGroup(replacing: .appInfo) {
                 Button("About Reelmark") { AboutPanel.show() }
             }
-            CommandGroup(replacing: .newItem) {
-                Button("Add Files…") { model.isImporting = true }
-                    .keyboardShortcut("o")
-            }
+            ReelmarkCommands(model: model)
         }
 
         Settings {

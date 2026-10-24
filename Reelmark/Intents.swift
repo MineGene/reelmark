@@ -7,9 +7,13 @@ import AppIntents
 /// Adds files or download folders to the list, as dragging them in does.
 struct AddFilesIntent: AppIntent {
     static let title: LocalizedStringResource = "Add Files to Reelmark"
+    // One string literal (a multi-line one, joined with backslashes):
+    // IntentDescription takes a localizable literal, not a built String.
     static let description = IntentDescription(
-        "Adds video files or download folders to Reelmark's list "
-            + "and looks each one up on The Movie Database.")
+        """
+        Adds video files or download folders to Reelmark's list \
+        and looks each one up on The Movie Database.
+        """)
     static let openAppWhenRun = true
 
     @Parameter(title: "Files or Folders", supportedContentTypes: [.movie, .folder])
@@ -28,8 +32,10 @@ struct AddFilesIntent: AppIntent {
 struct FileMatchedItemsIntent: AppIntent {
     static let title: LocalizedStringResource = "Add Matched Files to Library"
     static let description = IntentDescription(
-        "Copies or moves every matched file in Reelmark's list into your Jellyfin library, "
-            + "following the Copy or Move choice in Settings.")
+        """
+        Copies or moves every matched file in Reelmark's list into your Jellyfin library, \
+        following the Copy or Move choice in Settings.
+        """)
     static let openAppWhenRun = true
 
     @MainActor

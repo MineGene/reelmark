@@ -274,12 +274,19 @@ struct ItemList: NSViewRepresentable {
                 menu.addItem(withTitle: "Search Again…", action: #selector(searchAgain), keyEquivalent: "")
                     .target = self
             }
+            menu.addItem(withTitle: "Show in Finder", action: #selector(showInFinder), keyEquivalent: "")
+                .target = self
+            menu.addItem(.separator())
             menu.addItem(withTitle: "Remove from List", action: #selector(removeTargets), keyEquivalent: "")
                 .target = self
         }
 
         @objc private func searchAgain() {
             if let id = menuTargets.first { parent.onSearch(id) }
+        }
+
+        @objc private func showInFinder() {
+            parent.model.showInFinder(Set(menuTargets))
         }
 
         @objc private func removeTargets() {
