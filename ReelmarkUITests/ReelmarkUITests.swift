@@ -128,6 +128,30 @@ final class ReelmarkUITests: XCTestCase {
         XCTAssertTrue(issues.isEmpty, "Accessibility audit:\n" + issues.joined(separator: "\n"))
     }
 
+    /// Help › Report a Bug… previews what would be shared and offers to open
+    /// it in the browser. The test cancels rather than opening a browser.
+    @MainActor
+    func testReportABugShowsWhatWouldBeShared() {
+        let app = launch()
+        waitForItems(Self.all, in: app)
+        app.menuBars.menuBarItems["Help"].click()
+        app.menuItems["Report a Bug…"].click()
+        let note = app.staticTexts.matching(
+            NSPredicate(format: "value CONTAINS 'File names, folders and tokens are never included'")
+        ).firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: 10), "The report preview didn't open")
+        let details = app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH '- Reelmark: '"))
+            .firstMatch
+        XCTAssertTrue(details.exists, "The preview doesn't show the details")
+        let text = details.value as? String ?? ""
+        XCTAssertTrue(text.contains("4 items"), "The details don't summarise the list: \(text)")
+        XCTAssertFalse(text.contains(Self.ready), "The details include a file name")
+        XCTAssertTrue(app.buttons["Open in Browser"].exists)
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(eventually { !note.exists }, "The preview didn't close")
+        assertStillRunning(app)
+    }
+
     /// Opening a video with Reelmark (Finder's Open With, or a drop on the
     /// Dock icon) adds it to the list. The file is an empty placeholder.
     @MainActor

@@ -51,6 +51,11 @@ struct ReelmarkApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var model = LibraryModel.shared
 
+    init() {
+        // Lets macOS keep crash and hang summaries for bug reports.
+        CrashReports.start()
+    }
+
     var body: some Scene {
         Window("Reelmark", id: "main") {
             ContentView()

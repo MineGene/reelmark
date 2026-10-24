@@ -62,6 +62,8 @@ final class LibraryModel {
     /// True while dropped folders are still being searched for videos.
     private(set) var isScanning = false
     var isImporting = false
+    /// Which report Help › Report a Bug… or Request a Feature… is previewing.
+    var report: IssueLink.Kind?
 
     /// The person's own TMDB token, if they've added one in Settings.
     private(set) var ownToken: String? = Keychain.readToken()

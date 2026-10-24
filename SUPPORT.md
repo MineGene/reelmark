@@ -2,7 +2,7 @@
 
 - **How do I…?** Start with the [README](README.md): installing, using Reelmark, keyboard shortcuts and common questions.
 - **A question the README doesn't answer, or an idea to talk through:** ask in [Discussions](https://github.com/MineGene/reelmark/discussions).
-- **Something doesn't work:** open a [bug report](https://github.com/MineGene/reelmark/issues/new?template=bug.yml).
+- **Something doesn't work:** in Reelmark choose **Help › Report a Bug…**, which fills in the details that help find the problem, or open a [bug report](https://github.com/MineGene/reelmark/issues/new?template=bug.yml) yourself.
 - **A feature you'd like:** open a [feature request](https://github.com/MineGene/reelmark/issues/new?template=feature.yml).
 - **A security problem:** report it privately, as described in [SECURITY.md](SECURITY.md).
 
