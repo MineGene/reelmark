@@ -7,6 +7,7 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 ### Added
 
 - A search field in the toolbar (⌘F) narrows a long list to the files, matches or new names containing what you type.
+- While copying or moving, the toolbar and the Dock icon show how many files are done, the Mac stays awake until the last one, and the Dock icon bounces once when it finishes in the background.
 
 ## [0.1.16] - 2026-10-24
 
