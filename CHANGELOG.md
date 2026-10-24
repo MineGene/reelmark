@@ -8,6 +8,10 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 - Two actions for the Shortcuts app and Spotlight: **Add Files to Reelmark**, and **Add Matched Files to Library**, which waits for the matches and then files them.
 
+### Changed
+
+- The first time you copy or move files, Reelmark asks for your Jellyfin Movies or Shows folder instead of stopping with a message about Settings.
+
 ## [0.1.9] - 2026-10-24
 
 ### Fixed

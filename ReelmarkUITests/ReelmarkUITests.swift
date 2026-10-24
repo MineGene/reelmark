@@ -180,10 +180,16 @@ final class ReelmarkUITests: XCTestCase {
     }
 
     @MainActor
-    func testCopyWithoutLibraryFoldersSaysWhatToDo() {
+    func testCopyAsksForAMissingLibraryFolder() {
         let app = launch()
         waitForItems(Self.all, in: app)
         app.buttons["Copy 1 to Library"].firstMatch.click()
+        // With no Movies folder chosen yet, Copy asks for one with the open
+        // panel. (The panel is drawn by macOS for the sandbox, so its
+        // contents may not show to UI tests; the sheet itself does.)
+        XCTAssertTrue(app.sheets.firstMatch.waitForExistence(timeout: 10), "Copy didn't ask for a folder")
+        // Cancelling leaves the item saying where to choose it later.
+        app.typeKey(.escape, modifierFlags: [])
         let message = app.staticTexts["Choose a Movies folder in Settings."].firstMatch
         XCTAssertTrue(message.waitForExistence(timeout: 10))
         assertStillRunning(app)
