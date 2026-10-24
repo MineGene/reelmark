@@ -29,6 +29,10 @@ scripts/check-app.sh build/Release/Reelmark.app
 swift test --package-path Packages/ReelmarkCore
 ```
 
+## Trying the app by hand
+
+`scripts/make-test-downloads.sh` makes a folder of empty files named like downloads: free-to-show films for screenshots, and made-up names that try to break things (thousands of episodes, odd names, files that must be skipped, link loops). Reelmark only reads file names, so empty files behave exactly like real ones. Run it with `--help` for options.
+
 ## Rules the code must keep
 
 See the "Rules the design depends on" section of `CLAUDE.md`: what may be sent and where, the fixed entitlements, never overwriting or deleting, the built-in token and the Keychain for a person's own, a tiny memory footprint, Apple's standard controls, and no third-party code.
