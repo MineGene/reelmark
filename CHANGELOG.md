@@ -6,12 +6,23 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 ### Added
 
-- A search field in the toolbar (⌘F) narrows a long list to the files, matches or new names containing what you type.
-- While copying or moving, the toolbar and the Dock icon show how many files are done, the Mac stays awake until the last one, and the Dock icon bounces once when it finishes in the background.
+- After you add files to a long list, it scrolls to the first new one and selects it, as Finder does with pasted files.
 
 ### Changed
 
 - VoiceOver names the list, its status column, the match menu and the progress spinners, and announces when adding files or copying finishes.
+
+## [0.1.18] - 2026-10-24
+
+### Added
+
+- While copying or moving, the toolbar and the Dock icon show how many files are done, the Mac stays awake until the last one, and the Dock icon bounces once when it finishes in the background.
+
+## [0.1.17] - 2026-10-24
+
+### Added
+
+- A search field in the toolbar (⌘F) narrows a long list to the files, matches or new names containing what you type.
 
 ## [0.1.16] - 2026-10-24
 
@@ -150,7 +161,9 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 - First release: drag in downloaded movies and TV episodes, check the matches from The Movie Database, and copy or move them into a Jellyfin library with the folder and file names Jellyfin expects.
 
-[Unreleased]: https://github.com/MineGene/reelmark/compare/v0.1.16...HEAD
+[Unreleased]: https://github.com/MineGene/reelmark/compare/v0.1.18...HEAD
+[0.1.18]: https://github.com/MineGene/reelmark/compare/v0.1.17...v0.1.18
+[0.1.17]: https://github.com/MineGene/reelmark/compare/v0.1.16...v0.1.17
 [0.1.16]: https://github.com/MineGene/reelmark/compare/v0.1.15...v0.1.16
 [0.1.15]: https://github.com/MineGene/reelmark/compare/v0.1.14...v0.1.15
 [0.1.14]: https://github.com/MineGene/reelmark/compare/v0.1.13...v0.1.14

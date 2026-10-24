@@ -16,15 +16,77 @@ struct ContentView: View {
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
 
+    // The window is built in a few small pieces rather than one long chain
+    // of modifiers: Xcode 26's type checker, which the code scan builds
+    // with, gave up on the single expression.
+
     var body: some View {
-        @Bindable var model = model
         // Filtered once per redraw: a list can hold 100,000 items.
         let shown = shownItems
+        dialogs(windowContent(shown))
+            // Forget selected rows once they're gone from the list, or hidden
+            // by the search, so menu commands never act on rows that can't be
+            // seen.
+            .onChange(of: model.items.count) { forgetHiddenSelection() }
+            .onChange(of: searchText) { forgetHiddenSelection() }
+            // Select the first of newly added files, as Finder does with
+            // pasted ones (the list scrolls to it), unless the search hides it.
+            .onChange(of: model.firstAdded) { selectFirstAdded() }
+            // VoiceOver says when slow work finishes, which sighted people see
+            // from the spinner going away.
+            .onChange(of: model.isScanning) { old, new in announceIfFinished(scanning: old, now: new) }
+            .onChange(of: model.isRenaming) { old, new in announceIfFinished(filing: old, now: new) }
+    }
+
+    /// The Report a Bug sheet and the Search Again prompt.
+    private func dialogs(_ content: some View) -> some View {
+        content
+            .sheet(isPresented: isShowingReport) {
+                if let kind = model.report { ReportView(kind: kind, model: model) }
+            }
+            .alert("Search The Movie Database", isPresented: isSearchingAgain) {
+                TextField("Title", text: $searchTitle)
+                Button("Search") {
+                    if let id = searchingFor { model.search(searchTitle, for: id) }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Type the movie or show's name as it's usually written.")
+            }
+    }
+
+    /// The list (or the empty window) with its toolbar, search field,
+    /// drop target and the menu bar's commands.
+    private func windowContent(_ shown: [LibraryModel.Item]) -> some View {
+        @Bindable var model = model
+        return listArea(shown)
+            .toolbar { toolbar }
+            .searchable(text: $searchText, placement: .toolbar, prompt: "Search")
+            .searchFocused($isSearchFocused)
+            .navigationSubtitle(itemCount(showing: shown.count))
+            // The menu bar's commands (see Commands.swift), offered only while
+            // no sheet is open.
+            .focusedSceneValue(\.listCommands, listCommands)
+            .dropDestination(for: URL.self) { urls, _ in
+                model.add(urls)
+                return true
+            }
+            .fileImporter(
+                isPresented: $model.isImporting, allowedContentTypes: [.folder, .item],
+                allowsMultipleSelection: true
+            ) { result in
+                if case .success(let urls) = result { model.add(urls) }
+            }
+    }
+
+    private func listArea(_ shown: [LibraryModel.Item]) -> some View {
         Group {
             if model.items.isEmpty {
                 EmptyState(model: model)
             } else {
-                ItemList(model: model, items: shown, selection: $selection, onSearch: searchAgain)
+                ItemList(
+                    model: model, items: shown, selection: $selection, reveal: model.firstAdded,
+                    onSearch: searchAgain)
                     .overlay {
                         if shown.isEmpty { ContentUnavailableView.search(text: searchText) }
                     }
@@ -37,64 +99,17 @@ struct ContentView: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dropArea")
         .accessibilityLabel(model.items.isEmpty ? "Drop files here" : "Files to rename")
-        .toolbar { toolbar }
-        .searchable(text: $searchText, placement: .toolbar, prompt: "Search")
-        .searchFocused($isSearchFocused)
-        .navigationSubtitle(itemCount(showing: shown.count))
-        // VoiceOver says when slow work finishes, which sighted people see
-        // from the spinner going away.
-        .onChange(of: model.isScanning) { wasScanning, isScanning in
-            guard wasScanning && !isScanning else { return }
-            let count = itemCount(showing: shownItems.count)
-            announce(count.isEmpty ? "No videos found" : count)
-        }
-        .onChange(of: model.isRenaming) { wasRenaming, isRenaming in
-            if wasRenaming && !isRenaming { announce(filingSummary) }
-        }
-        // The menu bar's commands (see Commands.swift), offered only while no
-        // sheet is open.
-        .focusedSceneValue(
-            \.listCommands,
-            searchingFor == nil
-                ? ListCommands(
-                    model: model, selection: selection, fileReady: fileReady,
-                    searchAgain: searchAgain, find: { isSearchFocused = true })
-                : nil)
-        // Forget selected rows once they're gone from the list, or hidden by
-        // the search, so menu commands never act on rows that can't be seen.
-        .onChange(of: model.items.count) {
-            selection.formIntersection(shownItems.map(\.id))
-        }
-        .onChange(of: searchText) {
-            selection.formIntersection(shownItems.map(\.id))
-        }
-        .dropDestination(for: URL.self) { urls, _ in
-            model.add(urls)
-            return true
-        }
-        .fileImporter(
-            isPresented: $model.isImporting, allowedContentTypes: [.folder, .item],
-            allowsMultipleSelection: true
-        ) { result in
-            if case .success(let urls) = result { model.add(urls) }
-        }
-        .sheet(
-            isPresented: Binding(get: { model.report != nil }, set: { if !$0 { model.report = nil } })
-        ) {
-            if let kind = model.report { ReportView(kind: kind, model: model) }
-        }
-        .alert(
-            "Search The Movie Database",
-            isPresented: Binding(get: { searchingFor != nil }, set: { if !$0 { searchingFor = nil } })
-        ) {
-            TextField("Title", text: $searchTitle)
-            Button("Search") {
-                if let id = searchingFor { model.search(searchTitle, for: id) }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Type the movie or show's name as it's usually written.")
-        }
+    }
+
+    private var listCommands: ListCommands? {
+        guard searchingFor == nil else { return nil }
+        return ListCommands(
+            model: model, selection: selection, fileReady: fileReady,
+            searchAgain: searchAgain, find: { isSearchFocused = true })
+    }
+
+    private func forgetHiddenSelection() {
+        selection.formIntersection(shownItems.map(\.id))
     }
 
     @ToolbarContentBuilder
@@ -156,6 +171,19 @@ struct ContentView: View {
         }
     }
 
+    private var isShowingReport: Binding<Bool> {
+        Binding(get: { model.report != nil }, set: { if !$0 { model.report = nil } })
+    }
+
+    private var isSearchingAgain: Binding<Bool> {
+        Binding(get: { searchingFor != nil }, set: { if !$0 { searchingFor = nil } })
+    }
+
+    private func selectFirstAdded() {
+        guard let id = model.firstAdded, shownItems.contains(where: { $0.id == id }) else { return }
+        selection = [id]
+    }
+
     /// Opens the Search Again sheet for one item, filled in with its title.
     private func searchAgain(_ id: LibraryModel.Item.ID) {
         searchTitle = model.items.first(where: { $0.id == id })?.parsed.title ?? ""
@@ -177,6 +205,16 @@ struct ContentView: View {
         let total = count == 1 ? "1 item" : "\(count.formatted()) items"
         guard !ListSearch(searchText).isEmpty else { return total }
         return "\(shownCount.formatted()) of \(total)"
+    }
+
+    private func announceIfFinished(scanning was: Bool, now isScanning: Bool) {
+        guard was && !isScanning else { return }
+        let count = itemCount(showing: shownItems.count)
+        announce(count.isEmpty ? "No videos found" : count)
+    }
+
+    private func announceIfFinished(filing was: Bool, now isFiling: Bool) {
+        if was && !isFiling { announce(filingSummary) }
     }
 
     /// What VoiceOver says when a Copy or Move to Library finishes.
