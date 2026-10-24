@@ -4,6 +4,10 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 ## [Unreleased]
 
+### Added
+
+- Two actions for the Shortcuts app and Spotlight: **Add Files to Reelmark**, and **Add Matched Files to Library**, which waits for the matches and then files them.
+
 ### Fixed
 
 - The window can be made much smaller, so macOS window tiling can fit it in half or a quarter of the screen beside other apps.
