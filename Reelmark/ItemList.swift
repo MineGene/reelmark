@@ -237,8 +237,10 @@ struct ItemList: NSViewRepresentable {
                 cell.show(
                     "exclamationmark.triangle.fill", color: .systemYellow, label: "Needs attention",
                     help: message)
-            default:
-                cell.show(nil, color: nil, label: nil, help: nil)
+            case .ready:
+                cell.show(nil, color: nil, label: "Ready to file", help: nil)
+            case .pending, .searching:
+                cell.show(nil, color: nil, label: "Looking up", help: nil)
             }
             return cell
         }
@@ -340,9 +342,7 @@ private final class LabelCell: NSTableCellView {
         field.toolTip = help
         // The cell is what VoiceOver and the accessibility audit see, so it
         // needs the text as its name (otherwise it's named by its class).
-        // An empty cell, such as no new name yet, has nothing to say.
         setAccessibilityLabel(text)
-        setAccessibilityElement(!text.isEmpty)
     }
 }
 
@@ -391,6 +391,7 @@ private final class IconCell: NSTableCellView {
         // The cell speaks for the icon (as an image, named by its label), so
         // VoiceOver doesn't find the same icon twice.
         icon.setAccessibilityElement(false)
+        setAccessibilityElement(true)
         setAccessibilityRole(.image)
         addSubview(icon)
         NSLayoutConstraint.activate([
@@ -401,15 +402,15 @@ private final class IconCell: NSTableCellView {
 
     required init?(coder: NSCoder) { fatalError("Not used in a storyboard") }
 
-    func show(_ symbol: String?, color: NSColor?, label: String?, help: String?) {
+    func show(_ symbol: String?, color: NSColor?, label: String, help: String?) {
         icon.image = symbol.flatMap { NSImage(systemSymbolName: $0, accessibilityDescription: label) }
         // An empty icon would be an unnamed image to VoiceOver.
         icon.isHidden = symbol == nil
         icon.contentTintColor = color
         icon.toolTip = help
         setAccessibilityHelp(help)
-        // A cell with no icon has nothing to say, so VoiceOver skips it.
-        setAccessibilityElement(symbol != nil)
+        // Every cell is named, even without an icon: a cell left out of
+        // accessibility shows up as an unnamed cell instead.
         setAccessibilityLabel(label)
     }
 }
