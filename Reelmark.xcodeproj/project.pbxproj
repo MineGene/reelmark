@@ -367,6 +367,7 @@
 				CODE_SIGN_ENTITLEMENTS = Config/Reelmark.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_KEY_CFBundleDisplayName = Reelmark;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
@@ -387,6 +388,7 @@
 				CODE_SIGN_ENTITLEMENTS = Config/Reelmark.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_KEY_CFBundleDisplayName = Reelmark;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";

@@ -87,6 +87,25 @@ final class ReelmarkUITests: XCTestCase {
         }
     }
 
+    /// Opening a video with Reelmark (Finder's Open With, or a drop on the
+    /// Dock icon) adds it to the list. The file is an empty placeholder.
+    @MainActor
+    func testOpeningAVideoWithReelmarkAddsIt() throws {
+        let name = "Made.Up.Opened.Movie.2020.mkv"
+        let folder = FileManager.default.temporaryDirectory
+            .appending(path: "ReelmarkOpen-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let file = folder.appending(path: name)
+        try Data().write(to: file)
+
+        let app = launch(withItems: false)
+        XCTAssertTrue(app.staticTexts["Drag Movies and TV Episodes Here"].waitForExistence(timeout: 10))
+        app.open(file)
+        XCTAssertTrue(item(name, in: app).waitForExistence(timeout: 10), "The opened file wasn't added")
+        assertStillRunning(app)
+    }
+
     @MainActor
     func testListShowsEveryItem() {
         let app = launch()

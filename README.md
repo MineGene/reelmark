@@ -61,6 +61,12 @@ Reelmark adds two actions to the Shortcuts app, which Spotlight can run too:
 
 They run inside Reelmark, so nothing more leaves your Mac than when you use the window.
 
+### From Finder and the Dock
+
+- Drop videos or download folders on Reelmark's Dock icon, or choose **Open With › Reelmark** in Finder. Reelmark never becomes the default app for your videos.
+- Select files or folders in Finder, then right-click and choose **Services › Add to Reelmark**.
+- Right-click Reelmark's Dock icon for **Add Files…**.
+
 ## Privacy
 
 - **Only a title and year leave your Mac:** for example "Severance 2022", sent to TMDB's API. File names, folders and everything else stay on your Mac.
