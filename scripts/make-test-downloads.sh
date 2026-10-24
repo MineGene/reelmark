@@ -9,9 +9,12 @@
 #                they match cleanly: good for screenshots anyone may share.
 #   Stress/      Made-up names that try to break things: thousands of
 #                episodes, season folders, multi-episode files, accents and
-#                emoji, very long names, samples and hidden files that must
-#                be skipped, non-video files, deep nesting, a folder linked
-#                back into itself, and the same file reached twice.
+#                emoji, right-to-left and Chinese names, shell characters,
+#                very long names, release-name noise, titles that several
+#                films share, files that must be skipped (samples, hidden,
+#                partial downloads, inside apps), duplicates that would
+#                collide in the library, deep nesting, a folder linked back
+#                into itself, broken links and the same file reached twice.
 #
 # Usage: scripts/make-test-downloads.sh [folder] [--count N]
 #   folder     where to create it (default: ~/Desktop/Reelmark Test Downloads)
@@ -26,7 +29,7 @@ count=500
 while [ $# -gt 0 ]; do
   case "$1" in
     --count) count="${2:?--count needs a number}"; shift 2 ;;
-    -h | --help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h | --help) sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) folder="$1"; shift ;;
   esac
 done
@@ -60,6 +63,16 @@ make "Screenshot/His.Girl.Friday.1940.1080p.BluRay.mkv"
 make "Screenshot/Plan.9.from.Outer.Space.1957.720p.mkv"
 make "Screenshot/Charade.1963.1080p.BluRay.mkv"
 make "Screenshot/Night.of.the.Living.Dead.1968.1080p.BluRay.mkv"
+make "Screenshot/Agent.327.Operation.Barbershop.2017.1080p.WEB.mkv"
+make "Screenshot/Sita.Sings.the.Blues.2008.720p.WEB-DL.mkv"
+make "Screenshot/The.Cabinet.of.Dr.Caligari.1920.1080p.BluRay.mkv"
+make "Screenshot/A.Trip.to.the.Moon.1902.RESTORED.1080p.mkv"
+make "Screenshot/The.Kid.1921.1080p.BluRay.mkv"
+make "Screenshot/Safety.Last.1923.1080p.BluRay.mkv"
+make "Screenshot/Steamboat.Willie.1928.1080p.WEB.mkv"
+make "Screenshot/Detour.1945.720p.BluRay.mkv"
+make "Screenshot/The.Little.Shop.of.Horrors.1960.1080p.mkv"
+make "Screenshot/Carnival.of.Souls.1962.1080p.BluRay.mkv"
 
 # --- Stress: made-up names that try to break things ------------------------
 
@@ -91,6 +104,16 @@ make "Stress/Names/Made Up Movie 2016 [1080p] {edition-Director's Cut} (Dual Aud
 make "Stress/Names/Made.Up.Disc.2015.m2ts"
 make "Stress/Names/Made.Up.Disc.2014.vob"
 make "Stress/Names/Made.Up.Image.2013.iso"
+make "Stress/Names/ Made Up Movie With Spaces Around 2007 .mkv"
+make "Stress/Names/סרט.מומצא.2006.mkv"
+make "Stress/Names/فيلم.مختلق.2005.mkv"
+make "Stress/Names/虚构的电影.2004.mkv"
+make "Stress/Names/$(printf 'Cafe\xcc\x81').Decomposed.Accent.2003.mkv"
+make "Stress/Names/Made.Up.Movie.2002.mkv.mkv"
+make "Stress/Names/Made Up Movie 2001 ; rm -rf ~ ; .mkv"
+make "Stress/Names/Made \$HOME \`whoami\` 'Quoted' \"Movie\" 2000.mkv"
+make "Stress/Names/.mkv"
+make "Stress/Names/no-extension-made-up-movie-1999"
 
 # Must be skipped: samples, hidden files, non-video files, split archives.
 make "Stress/Skipped/Made.Up.Movie.2012.sample.mkv"
@@ -100,6 +123,47 @@ make "Stress/Skipped/Made.Up.Movie.2012.nfo"
 make "Stress/Skipped/Made.Up.Movie.2012.en.srt"
 make "Stress/Skipped/poster.jpg"
 make "Stress/Skipped/Made.Up.Movie.2012.part.001"
+make "Stress/Skipped/Made.Up.Movie.2012.mkv.part"
+make "Stress/Skipped/Made.Up.Movie.2012.mkv.!qB"
+make "Stress/Skipped/Made Up.app/Contents/Resources/Made.Up.Clip.2012.mkv"
+make "Stress/Skipped/.Hidden Folder/Made.Up.Movie.2012.mkv"
+
+# Release-name noise the parser has to see through.
+make "Stress/Noise/Made.Up.Movie.2018.PROPER.REPACK.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-GROUP.mkv"
+make "Stress/Noise/[GROUP] Made Up Anime - 01 [1080p][ABCD1234].mkv"
+make "Stress/Noise/Made.Up.Show.2019.S01E01.1080p.WEB.mkv"
+make "Stress/Noise/made_up_movie_with_underscores_2017.mkv"
+make "Stress/Noise/Made-Up-Movie-With-Dashes-2016.mkv"
+make "Stress/Noise/Made Up Movie With Spaces (2015) - 1080p.mkv"
+make "Stress/Noise/Made Up Show - S01E02 - A Made Up Episode Title.mkv"
+make "Stress/Noise/Made.Up.Daily.Show.2024.03.15.720p.WEB.mkv"
+make "Stress/Noise/Made.Up.Show.S00E01.Special.mkv"
+make "Stress/Noise/Made.Up.Movie.Part.1.2014.mkv"
+make "Stress/Noise/Made.Up.Movie.2013/CD1/Made.Up.Movie.2013.CD1.avi"
+make "Stress/Noise/Made.Up.Movie.2013/CD2/Made.Up.Movie.2013.CD2.avi"
+make "Stress/Noise/Made.Up.Movie.2012.3D.HSBS.1080p.mkv"
+make "Stress/Noise/Made.Up.Movie.2011.Extended.Cut.1080p.mkv"
+make "Stress/Noise/Made.Up.Movie.2010.1080p.www.example-site.org.mkv"
+make "Stress/Noise/Made Up Show S01 COMPLETE 1080p/Made.Up.Show.S01E01.mkv"
+make "Stress/Noise/Made Up Show S01 COMPLETE 1080p/Made.Up.Show.S01E02.mkv"
+
+# Real, free-to-show titles that test matching: no year where several
+# films share a title, the original-language title, and a year that
+# picks one version over another.
+make "Stress/Matching/Night.of.the.Living.Dead.1080p.mkv"
+make "Stress/Matching/Nosferatu.mkv"
+make "Stress/Matching/Metropolis.mkv"
+make "Stress/Matching/Nosferatu, eine Symphonie des Grauens (1922).mkv"
+make "Stress/Matching/Das Cabinet des Dr. Caligari 1920.mkv"
+make "Stress/Matching/Le Voyage dans la Lune 1902.mkv"
+make "Stress/Matching/Night.of.the.Living.Dead.1990.mkv"
+
+# The same file name in two folders: both map to one place in the
+# library, so the second must be refused, never overwrite the first.
+make "Stress/Duplicates/First/Made.Up.Duplicate.2009.1080p.mkv"
+make "Stress/Duplicates/Second/Made.Up.Duplicate.2009.1080p.mkv"
+make "Stress/Duplicates/Made.Up.Case.2008.mkv"
+make "Stress/Duplicates/Other/MADE.UP.CASE.2008.mkv"
 
 # Deep nesting.
 make "Stress/Deep/a/b/c/d/e/f/g/h/i/j/Deep.Made.Up.Movie.2011.mkv"
@@ -109,6 +173,8 @@ make "Stress/Deep/a/b/c/d/e/f/g/h/i/j/Deep.Made.Up.Movie.2011.mkv"
 make "Stress/Links/Linked.Made.Up.Movie.2010.mkv"
 ln -s .. "$folder/Stress/Links/Loop"
 ln -s "$folder/Stress/Links" "$folder/Stress/Links Again"
+ln -s "$folder/Stress/Links/Linked.Made.Up.Movie.2010.mkv" "$folder/Stress/Links/Link To File.mkv"
+ln -s "$folder/Stress/Links/Missing.Made.Up.Movie.2010.mkv" "$folder/Stress/Links/Broken Link.mkv"
 
 files=$(find "$folder" -type f | wc -l | tr -d ' ')
 echo "Made $files empty files in: $folder"
