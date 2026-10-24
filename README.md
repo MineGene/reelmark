@@ -6,6 +6,8 @@
 [![macOS 26 or later](https://img.shields.io/badge/macOS-26%2B-blue)](#requirements)
 [![MIT License](https://img.shields.io/github/license/MineGene/reelmark)](LICENSE)
 
+<img src="docs/screenshot.png" width="872" alt="Reelmark's window, empty and waiting: “Drag Movies and TV Episodes Here”, with an Add Files button.">
+
 Drag in a download, and Reelmark looks it up on [The Movie Database](https://www.themoviedb.org) (TMDB). It then copies it into your Jellyfin library with exactly the folder and file names Jellyfin expects:
 
 ```
