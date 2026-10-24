@@ -36,7 +36,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement privately on GitHub: use **Report content** from the ⋯ menu on the comment, issue or pull request, and choose to report it to the repository’s maintainer. For anything that can’t be reported that way, open a private report through the [Security tab](https://github.com/MineGene/reelmark/security/advisories/new) and say it’s a conduct report. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement privately through the repository's [private reporting form](https://github.com/MineGene/reelmark/security/advisories/new) (Security tab › Report a vulnerability): start the title with “Conduct report”. Only the maintainer can see it. You can also report a comment, issue or pull request to GitHub itself with **Report content** in its ⋯ menu. All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 
