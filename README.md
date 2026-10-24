@@ -90,7 +90,7 @@ Reelmark is written almost entirely by Claude, Anthropic's AI, through Claude Co
 
 ## Contributing and security
 
-Bug reports and ideas are welcome on [Issues](https://github.com/MineGene/reelmark/issues). Please don't attach media files or screenshots of your library. See [CONTRIBUTING.md](CONTRIBUTING.md) for how changes are made and checked, and [SECURITY.md](SECURITY.md) to report a security problem privately.
+Bug reports and ideas are welcome on [Issues](https://github.com/MineGene/reelmark/issues), and questions in [Discussions](https://github.com/MineGene/reelmark/discussions) (see [SUPPORT.md](SUPPORT.md)). Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please don't attach media files or screenshots of your library. See [CONTRIBUTING.md](CONTRIBUTING.md) for how changes are made and checked, and [SECURITY.md](SECURITY.md) to report a security problem privately.
 
 ## License
 
