@@ -30,6 +30,14 @@ struct ContentView: View {
         .accessibilityIdentifier("dropArea")
         .toolbar { toolbar }
         .navigationSubtitle(itemCount)
+        // VoiceOver says when slow work finishes, which sighted people see
+        // from the spinner going away.
+        .onChange(of: model.isScanning) { wasScanning, isScanning in
+            if wasScanning && !isScanning { announce(itemCount.isEmpty ? "No videos found" : itemCount) }
+        }
+        .onChange(of: model.isRenaming) { wasRenaming, isRenaming in
+            if wasRenaming && !isRenaming { announce(filingSummary) }
+        }
         // Forget selected rows once they're gone from the list.
         .onChange(of: model.items.count) {
             selection.formIntersection(model.items.map(\.id))
@@ -69,6 +77,7 @@ struct ContentView: View {
                 ProgressView()
                     .controlSize(.small)
                     .help("Finding videos in what you added")
+                    .accessibilityLabel("Finding videos")
                 Button("Stop") { model.stopScanning() }
                     .help("Stop searching the folders you added. Nothing found so far is added.")
             }
@@ -84,6 +93,7 @@ struct ContentView: View {
             } label: {
                 if model.isRenaming {
                     ProgressView().controlSize(.small)
+                        .accessibilityLabel(model.mode == .copy ? "Copying" : "Moving")
                 } else {
                     Text(primaryActionTitle)
                 }
@@ -101,6 +111,18 @@ struct ContentView: View {
         let count = model.items.count
         guard count > 0 else { return "" }
         return count == 1 ? "1 item" : "\(count.formatted()) items"
+    }
+
+    /// What VoiceOver says when a Copy or Move to Library finishes.
+    private var filingSummary: String {
+        let done = model.items.count(where: { $0.status == .done })
+        let attention = model.items.count(where: { $0.statusRank == 0 })
+        return attention == 0
+            ? "\(done) in your library" : "\(done) in your library, \(attention) need attention"
+    }
+
+    private func announce(_ text: String) {
+        AccessibilityNotification.Announcement(text).post()
     }
 
     /// Says what will happen, like Finder's Copy and Move: "Copy 3 to Library".

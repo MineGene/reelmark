@@ -29,6 +29,7 @@ struct ItemList: NSViewRepresentable {
         table.allowsMultipleSelection = true
         table.usesAlternatingRowBackgroundColors = true
         table.columnAutoresizingStyle = .uniformColumnAutoresizingStyle
+        table.setAccessibilityLabel("Files to rename")
         for column in Column.allCases { table.addTableColumn(column.tableColumn) }
         table.dataSource = context.coordinator
         table.delegate = context.coordinator
@@ -67,6 +68,9 @@ struct ItemList: NSViewRepresentable {
             case .newName: column.title = "New Name"
             case .status:
                 column.title = ""
+                // No title fits in so narrow a column, but VoiceOver still names it.
+                column.headerCell.setAccessibilityLabel("Status")
+                column.headerToolTip = "Status"
                 column.width = 24
                 column.resizingMask = []
                 return column
@@ -166,6 +170,29 @@ struct ItemList: NSViewRepresentable {
             guard !urls.isEmpty else { return false }
             parent.model.add(urls)
             return true
+        }
+
+        // MARK: VoiceOver
+
+        /// Each row reads as one sentence, so VoiceOver users moving down the
+        /// list hear everything about an item without visiting every column.
+        func tableView(_ tableView: NSTableView, didAdd rowView: NSTableRowView, forRow row: Int) {
+            guard rows.indices.contains(row) else { return }
+            rowView.setAccessibilityLabel(Self.spoken(rows[row]))
+        }
+
+        static func spoken(_ item: Item) -> String {
+            let match = item.match.map { "matched \($0.displayName)" }
+            let status: String? =
+                switch item.status {
+                case .pending: "waiting to search"
+                case .searching: "searching"
+                case .ready: item.newPath.map { "will be named \($0)" }
+                case .noMatch: "no match found"
+                case .failed(let message): message
+                case .done: "in your library"
+                }
+            return ([item.fileName, match, status].compactMap { $0 }).joined(separator: ", ")
         }
 
         // MARK: Cells
@@ -339,6 +366,7 @@ private final class MenuCell: NSTableCellView {
         popUp.translatesAutoresizingMaskIntoConstraints = false
         popUp.controlSize = .small
         popUp.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        popUp.setAccessibilityLabel("Match")
         addSubview(popUp)
         NSLayoutConstraint.activate([
             popUp.leadingAnchor.constraint(equalTo: leadingAnchor),

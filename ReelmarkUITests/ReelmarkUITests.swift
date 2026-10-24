@@ -87,6 +87,37 @@ final class ReelmarkUITests: XCTestCase {
         }
     }
 
+    /// Xcode's accessibility audit (the checks Accessibility Inspector runs:
+    /// labels, contrast, hit areas, Dynamic Type and more) on the empty
+    /// window and on a filled list. Any issue it finds fails the test.
+    @MainActor
+    func testWindowPassesTheAccessibilityAudit() throws {
+        for withItems in [false, true] {
+            let app = launch(withItems: withItems)
+            if withItems {
+                waitForItems(Self.all, in: app)
+            } else {
+                let emptyState = app.staticTexts["Drag Movies and TV Episodes Here"]
+                XCTAssertTrue(emptyState.waitForExistence(timeout: 10))
+            }
+            try app.performAccessibilityAudit()
+            app.terminate()
+        }
+    }
+
+    /// VoiceOver reads each row as one sentence: file, match and what happens next.
+    @MainActor
+    func testRowsReadAsOneSentence() {
+        let app = launch()
+        waitForItems(Self.all, in: app)
+        let sentence = "\(Self.ready), matched Ready Movie (2020), will be named"
+        let row = app.tableRows.matching(NSPredicate(format: "label BEGINSWITH %@", sentence)).firstMatch
+        if !row.waitForExistence(timeout: 10) {
+            print(app.debugDescription)
+            XCTFail("No row reads as one sentence")
+        }
+    }
+
     @MainActor
     func testListShowsEveryItem() {
         let app = launch()
