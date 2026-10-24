@@ -12,7 +12,10 @@ public struct TMDBClient: Sendable {
     public enum Failure: Error, Equatable {
         /// TMDB rejected the access token.
         case invalidToken
-        /// Any other HTTP error, such as rate limiting (429).
+        /// TMDB is busy (429, rate limited). `retryAfter` is how many
+        /// seconds it asked to wait, if it said.
+        case busy(retryAfter: Int?)
+        /// Any other HTTP error.
         case http(Int)
         case badResponse
     }
@@ -94,8 +97,19 @@ public struct TMDBClient: Sendable {
         switch http.statusCode {
         case 200: return data
         case 401: throw Failure.invalidToken
+        case 429:
+            throw Failure.busy(retryAfter: Self.retryAfter(http.value(forHTTPHeaderField: "Retry-After")))
         default: throw Failure.http(http.statusCode)
         }
+    }
+
+    /// The wait a 429 answer asks for, in whole seconds. Retry-After can
+    /// also be a date, which TMDB doesn't send; that and anything else
+    /// unreadable count as no answer, and the caller picks its own wait.
+    static func retryAfter(_ header: String?) -> Int? {
+        guard let header, let seconds = Int(header.trimmingCharacters(in: .whitespaces)), seconds >= 0
+        else { return nil }
+        return seconds
     }
 
     // MARK: - Decoding

@@ -8,7 +8,7 @@ import ReelmarkCore
 /// network lookups and the file moves, which are awaited.
 ///
 /// Memory: only names, numbers and short text are kept (no artwork, no file
-/// contents), and lookups run one at a time, so even hundreds of files use
+/// contents), and at most four lookups run at once, so even thousands of files use
 /// very little.
 @MainActor
 @Observable
@@ -216,64 +216,96 @@ final class LibraryModel {
         lookUpPending()
     }
 
-    /// Looks up waiting items one at a time, gently on TMDB and on memory.
+    /// Looks up waiting items, a few at a time (parallelLookups), gently on TMDB and on memory.
+    /// How many lookups run at once: fast enough for a big list of different
+    /// titles, and at about 8 requests a second at most, far under the
+    /// roughly 40 a second TMDB asks apps to stay below.
+    static let parallelLookups = 4
+
     private func lookUpPending() {
         guard lookup == nil else { return }
         lookup = Task {
             // A cancelled lookup was already replaced; leave the new one be.
             defer { if !Task.isCancelled { lookup = nil } }
             let client = TMDBClient(token: token)
-            var answeredFromCache = 0
-            while !Task.isCancelled, let index = nextToLookUp() {
-                let id = items[index].id
-                let parsed = items[index].parsed
-                items[index].status = .searching
-
-                let key = "\(parsed.isEpisode)|\(parsed.title.lowercased())|\(parsed.year ?? 0)"
-                let status: Item.Status
-                var matches: [Match] = []
-                do {
-                    if let cached = cache[key] {
-                        matches = cached
-                        // A long season pack is answered from the cache
-                        // without waiting; let the window update now and then.
-                        answeredFromCache += 1
-                        if answeredFromCache.isMultiple(of: 200) { await Task.yield() }
-                    } else {
-                        matches = try await Self.search(client, parsed)
-                        cache[key] = matches
-                    }
-                    status = matches.isEmpty ? .noMatch : .ready
-                } catch {
-                    status = .failed(Self.describe(error))
+            lookupsBlocked = false
+            await withTaskGroup(of: Void.self) { group in
+                for _ in 0..<Self.parallelLookups {
+                    group.addTask { await self.lookUpWorker(client) }
                 }
+            }
+        }
+    }
 
-                // The item may have been removed while we waited.
-                guard let current = self.index(of: id) else { continue }
-                // Stopped (token changed): leave it waiting rather than failed.
-                if Task.isCancelled {
-                    items[current].status = .pending
-                    break
+    /// Set when TMDB rejects the token, so every worker stops until it's fixed.
+    @ObservationIgnored private var lookupsBlocked = false
+    /// Searches already on their way, so workers that reach the same title
+    /// (a season pack) share one request instead of each sending their own.
+    @ObservationIgnored private var inFlight: [String: Task<[Match], Error>] = [:]
+
+    /// One of the parallel lookups: takes the next waiting item until none
+    /// are left. Workers run on the main thread between network calls, so
+    /// they never touch the list at the same time.
+    private func lookUpWorker(_ client: TMDBClient) async {
+        var answeredFromCache = 0
+        while !Task.isCancelled, !lookupsBlocked, let index = nextToLookUp() {
+            let id = items[index].id
+            let parsed = items[index].parsed
+            items[index].status = .searching
+
+            let key = "\(parsed.isEpisode)|\(parsed.title.lowercased())|\(parsed.year ?? 0)"
+            let status: Item.Status
+            var matches: [Match] = []
+            do {
+                if let cached = cache[key] {
+                    matches = cached
+                    // A long season pack is answered from the cache
+                    // without waiting; let the window update now and then.
+                    answeredFromCache += 1
+                    if answeredFromCache.isMultiple(of: 200) { await Task.yield() }
+                } else if let running = inFlight[key] {
+                    matches = try await running.value
+                } else {
+                    let search = Task { try await Self.search(client, parsed) }
+                    inFlight[key] = search
+                    defer { inFlight[key] = nil }
+                    matches = try await search.value
+                    cache[key] = matches
                 }
-                items[current].candidates = matches
-                items[current].matchID = matches.first?.id
-                items[current].status = status
+                status = matches.isEmpty ? .noMatch : .ready
+            } catch {
+                status = .failed(Self.describe(error))
+            }
 
-                // A bad token fails every search; stop until it's fixed.
-                if Self.isAuthError(status) { break }
+            // The item may have been removed while we waited.
+            guard let current = self.index(of: id) else { continue }
+            // Stopped (token changed): leave it waiting rather than failed.
+            if Task.isCancelled {
+                items[current].status = .pending
+                break
+            }
+            items[current].candidates = matches
+            items[current].matchID = matches.first?.id
+            items[current].status = status
+
+            // A bad token fails every search; stop until it's fixed.
+            if Self.isAuthError(status) {
+                lookupsBlocked = true
+                break
             }
         }
     }
 
     /// TMDB answers "busy" (429) when asked too often in a short time. Wait
-    /// 2, 4 and then 8 seconds and try again before giving up on the item.
+    /// as long as it asks (Retry-After), or else 2, 4 and then 8 seconds,
+    /// and try again before giving up on the item.
     private static func search(_ client: TMDBClient, _ parsed: ParsedName) async throws -> [Match] {
         var wait = 2
         while true {
             do {
                 return try await client.search(parsed)
-            } catch TMDBClient.Failure.http(429) where wait <= 8 {
-                try await Task.sleep(for: .seconds(wait))
+            } catch TMDBClient.Failure.busy(let retryAfter) where wait <= 8 {
+                try await Task.sleep(for: .seconds(max(retryAfter ?? 0, wait)))
                 wait *= 2
             }
         }
@@ -511,7 +543,7 @@ final class LibraryModel {
     static func describe(_ error: Error) -> String {
         switch error {
         case TMDBClient.Failure.invalidToken: authMessage
-        case TMDBClient.Failure.http(429): "TMDB is busy. Try again in a moment."
+        case TMDBClient.Failure.busy: "TMDB is busy. Try again in a moment."
         case TMDBClient.Failure.http(let code): "TMDB returned an error (\(code))."
         case let error as URLError where error.code == .notConnectedToInternet: "You're offline."
         default: error.localizedDescription
