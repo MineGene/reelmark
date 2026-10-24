@@ -65,10 +65,18 @@ swift test --package-path Packages/ReelmarkCore
 
 See the "Rules the design depends on" section of `CLAUDE.md`: what may be sent and where, the fixed entitlements, never overwriting or deleting, the built-in token and the Keychain for a person's own, a tiny memory footprint, Apple's standard controls, and no third-party code.
 
-## Releases
+## From idea to release
 
-What changed in each version is recorded in [CHANGELOG.md](CHANGELOG.md), in the [Keep a Changelog](https://keepachangelog.com) format. If your change affects what people see or can do, add a line under **Unreleased**.
+Reelmark follows established, public practices at each stage, so the process can be checked rather than taken on trust:
 
-Releases are automatic. As soon as a change to the app is merged into `main`, the *Release* workflow tests, builds and publishes the next patch version (0.1.1, 0.1.2, …) as a DMG with its checksum and build attestation, then verifies the download and rebuilds it from source on a fresh machine. Changes to docs, tests or CI alone don't make a release. A nightly run also checks `main`, in case a merge didn't start one.
+1. **Design.** Every change starts as an issue: a bug report, a feature request, or a short proposal for anything larger, saying the problem and the intended approach before code is written. Ideas are weighed against "What Reelmark is, and isn't" above and Apple's [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/).
+2. **Code.** [GitHub flow](https://docs.github.com/en/get-started/using-github/github-flow): a short-lived branch from `main`, one change per pull request, with tests, and the README, changelog and other docs updated in the same pull request. Commit messages follow [Git's own guidelines](https://git-scm.com/docs/SubmittingPatches).
+3. **Review and build.** Every pull request is built and tested by GitHub Actions (core tests, UI tests, the app checks, CodeQL, a reproducibility check, commit privacy and a workflow security audit) and reviewed by Gemini Code Assist. `main` only accepts pull requests whose required checks pass.
+4. **Release.** Merging a change to the app publishes the next version straight away as a **pre-release**, built only by GitHub Actions, reproducibly, with a signed build record ([release engineering](https://sre.google/sre-book/release-engineering/) in Google's sense: automated, hermetic and repeatable). Version numbers follow [Semantic Versioning](https://semver.org), and [CHANGELOG.md](CHANGELOG.md) follows [Keep a Changelog](https://keepachangelog.com).
+5. **Test on a Mac.** Checks that only a person on a real Mac can do are listed as checkboxes in each pull request's "Check on a Mac" section. The release collects them into a "Check <version> on a Mac" issue. A failed check becomes its own bug report.
+6. **Promote.** Every Monday morning (Queensland time), the *Promote release* workflow makes the newest checked pre-release the stable release: one whose checklist issue is closed, along with those of every pre-release before it. The build isn't changed, only its label. An urgent fix can be promoted at once: **Actions › Promote release › Run workflow** with its version.
+7. **Respond.** Security problems are reported privately (see [SECURITY.md](SECURITY.md)) and fixed in the latest release.
 
-For a bigger version number (for example `0.2.0`) or to release straight away: **Actions › Release › Run workflow**, keep the branch on `main`, and optionally enter the version.
+What changed in each version is recorded in [CHANGELOG.md](CHANGELOG.md). If your change affects what people see or can do, add a line under **Unreleased**.
+
+Changes to docs, tests or CI alone don't make a release. A nightly run also checks `main`, in case a merge didn't start one. For a bigger version number (for example `0.2.0`): **Actions › Release › Run workflow**, keep the branch on `main`, and enter the version.
