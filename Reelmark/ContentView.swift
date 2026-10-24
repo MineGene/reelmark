@@ -6,6 +6,7 @@ import SwiftUI
 /// (materials, toolbar, light and dark, accessibility) without custom styling.
 struct ContentView: View {
     @Environment(LibraryModel.self) private var model
+    @Environment(\.undoManager) private var undoManager
     @State private var selection = Set<LibraryModel.Item.ID>()
     @State private var searchingFor: LibraryModel.Item.ID?
     @State private var searchTitle = ""
@@ -16,10 +17,7 @@ struct ContentView: View {
             if model.items.isEmpty {
                 EmptyState(model: model)
             } else {
-                ItemList(model: model, selection: $selection) { id in
-                    searchTitle = model.items.first(where: { $0.id == id })?.parsed.title ?? ""
-                    searchingFor = id
-                }
+                ItemList(model: model, selection: $selection, onSearch: searchAgain)
             }
         }
         // Fill the window, so a drop anywhere in it counts, not just on the
@@ -39,6 +37,15 @@ struct ContentView: View {
         .onChange(of: model.isRenaming) { wasRenaming, isRenaming in
             if wasRenaming && !isRenaming { announce(filingSummary) }
         }
+        // The menu bar's commands (see Commands.swift), offered only while no
+        // sheet is open.
+        .focusedSceneValue(
+            \.listCommands,
+            searchingFor == nil
+                ? ListCommands(
+                    model: model, selection: selection, fileReady: fileReady,
+                    searchAgain: searchAgain)
+                : nil)
         // Forget selected rows once they're gone from the list.
         .onChange(of: model.items.count) {
             selection.formIntersection(model.items.map(\.id))
@@ -89,9 +96,7 @@ struct ContentView: View {
                     .disabled(model.isRenaming)
                     .help("Remove everything from this list. Your files aren't changed.")
             }
-            Button {
-                Task { await model.renameReady() }
-            } label: {
+            Button(action: fileReady) {
                 if model.isRenaming {
                     ProgressView().controlSize(.small)
                         .accessibilityLabel(model.mode == .copy ? "Copying" : "Moving")
@@ -105,6 +110,16 @@ struct ContentView: View {
                 model.mode == .copy
                     ? "Copy matched files into your library" : "Move matched files into your library")
         }
+    }
+
+    private func fileReady() {
+        Task { await model.renameReady(undoManager: undoManager) }
+    }
+
+    /// Opens the Search Again sheet for one item, filled in with its title.
+    private func searchAgain(_ id: LibraryModel.Item.ID) {
+        searchTitle = model.items.first(where: { $0.id == id })?.parsed.title ?? ""
+        searchingFor = id
     }
 
     /// "1,234 items" under the window title, so a long list's size is clear.

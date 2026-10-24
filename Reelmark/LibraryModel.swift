@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Observation
 import ReelmarkCore
@@ -85,6 +86,8 @@ final class LibraryModel {
     /// Dropped or opened items the sandbox lets us use until the list is cleared.
     @ObservationIgnored private var accessGranted: [URL] = []
     @ObservationIgnored private var lookup: Task<Void, Never>?
+    /// The window's undo history, which holds the last Copy or Move to Library.
+    @ObservationIgnored private weak var undoManager: UndoManager?
 
     // Big drops (tens of thousands of files) stay quick: items are found by
     // ID through an index rather than by searching the list, and lookups
@@ -163,6 +166,8 @@ final class LibraryModel {
         cache = [:]
         for url in accessGranted { url.stopAccessingSecurityScopedResource() }
         accessGranted = []
+        // Undo needs the files' access, just given up, to move them back.
+        undoManager?.removeAllActions(withTarget: self)
     }
 
     /// Rebuilds the ID index after items are added or removed. (Changing an
@@ -276,12 +281,46 @@ final class LibraryModel {
 
     // MARK: - Filing
 
-    /// Moves or copies every matched file into its library folder.
-    func renameReady() async {
+    /// One file Reelmark put in the library, kept so Edit ▸ Undo can reverse it.
+    struct Transfer: Sendable {
+        let id: Item.ID
+        let source: URL
+        let destination: URL
+        let library: URL
+        let createdFolder: URL?
+    }
+
+    /// One Copy or Move to Library, which Edit ▸ Undo reverses and Edit ▸
+    /// Redo repeats. A class, so a redo can record the folders it creates
+    /// for the next undo.
+    @MainActor
+    final class Batch {
+        let mode: MediaFiles.TransferMode
+        var transfers: [Transfer]
+
+        init(mode: MediaFiles.TransferMode, transfers: [Transfer]) {
+            self.mode = mode
+            self.transfers = transfers
+        }
+
+        var actionName: String { mode == .copy ? "Copy to Library" : "Move to Library" }
+    }
+
+    /// Moves or copies every matched file into its library folder. The whole
+    /// batch can then be reversed with Edit ▸ Undo (Command-Z) and repeated
+    /// with Edit ▸ Redo (Shift-Command-Z), as in Finder.
+    func renameReady(undoManager: UndoManager?) async {
         guard !isRenaming else { return }
         isRenaming = true
         defer { isRenaming = false }
         let mode = self.mode
+        var done: [Transfer] = []
+        defer {
+            if let undoManager, !done.isEmpty {
+                self.undoManager = undoManager
+                registerUndo(of: Batch(mode: mode, transfers: done))
+            }
+        }
 
         for id in items.filter({ $0.status == .ready }).map(\.id) {
             guard let index = index(of: id),
@@ -296,22 +335,126 @@ final class LibraryModel {
 
             let source = items[index].source
             let destination = library.appending(path: path)
-            let hasAccess = library.startAccessingSecurityScopedResource()
-            // Off the main thread: a copy to another drive can take minutes.
-            let failure = await Task.detached { () -> String? in
-                do {
-                    try MediaFiles.transfer(source, to: destination, mode: mode)
-                    return nil
-                } catch {
-                    return error.localizedDescription
-                }
-            }.value
-            if hasAccess { library.stopAccessingSecurityScopedResource() }
-
-            if let current = self.index(of: id) {
-                items[current].status = failure.map { Item.Status.failed($0) } ?? .done
+            if let created = await transfer(id: id, source, to: destination, in: library, mode: mode) {
+                done.append(
+                    Transfer(
+                        id: id, source: source, destination: destination, library: library,
+                        createdFolder: created.createdFolder))
             }
         }
+    }
+
+    /// Moves or copies one file and updates its row. Returns nil if it
+    /// failed, otherwise the outermost folder it created (if any).
+    private func transfer(
+        id: Item.ID, _ source: URL, to destination: URL, in library: URL, mode: MediaFiles.TransferMode
+    ) async -> Filed? {
+        let hasAccess = library.startAccessingSecurityScopedResource()
+        // Off the main thread: a copy to another drive can take minutes.
+        let result = await Task.detached { () -> Result<URL?, Error> in
+            Result { try MediaFiles.transfer(source, to: destination, mode: mode) }
+        }.value
+        if hasAccess { library.stopAccessingSecurityScopedResource() }
+
+        if let current = index(of: id) {
+            switch result {
+            case .success: items[current].status = .done
+            case .failure(let error): items[current].status = .failed(error.localizedDescription)
+            }
+        }
+        guard case .success(let created) = result else { return nil }
+        return Filed(createdFolder: created)
+    }
+
+    private struct Filed {
+        let createdFolder: URL?
+    }
+
+    // Undo and redo. Each handler registers its opposite straight away (that's
+    // how UndoManager tells an undo from a redo), then does the file work in
+    // a task, since moving files back from another drive can take a while.
+
+    private func registerUndo(of batch: Batch) {
+        undoManager?.registerUndo(withTarget: self) { model in
+            MainActor.assumeIsolated { model.undo(batch) }
+        }
+        undoManager?.setActionName(batch.actionName)
+    }
+
+    private func undo(_ batch: Batch) {
+        undoManager?.registerUndo(withTarget: self) { model in
+            MainActor.assumeIsolated { model.redo(batch) }
+        }
+        undoManager?.setActionName(batch.actionName)
+        Task { await reverse(batch) }
+    }
+
+    private func redo(_ batch: Batch) {
+        registerUndo(of: batch)
+        Task { await repeatTransfers(batch) }
+    }
+
+    /// Reverses a Copy or Move to Library, newest file first so folders
+    /// Reelmark created are empty again by the time they're checked. Moved
+    /// files go back where they were; copies go to the Trash. Items still in
+    /// the list are ready to file again.
+    private func reverse(_ batch: Batch) async {
+        guard !isRenaming else { return }
+        isRenaming = true
+        defer { isRenaming = false }
+
+        let mode = batch.mode
+        for transfer in batch.transfers.reversed() {
+            let hasAccess = transfer.library.startAccessingSecurityScopedResource()
+            let result = await Task.detached { () -> Result<Void, Error> in
+                Result {
+                    try MediaFiles.undoTransfer(
+                        transfer.source, to: transfer.destination, mode: mode,
+                        createdFolder: transfer.createdFolder)
+                }
+            }.value
+            if hasAccess { transfer.library.stopAccessingSecurityScopedResource() }
+
+            if let current = index(of: transfer.id) {
+                switch result {
+                case .success: items[current].status = .ready
+                case .failure(let error): items[current].status = .failed(error.localizedDescription)
+                }
+            }
+        }
+    }
+
+    /// Files the same files again, to the same places. Only the ones that
+    /// succeed are kept for the next undo.
+    private func repeatTransfers(_ batch: Batch) async {
+        guard !isRenaming else { return }
+        isRenaming = true
+        defer { isRenaming = false }
+
+        var done: [Transfer] = []
+        for old in batch.transfers {
+            if let created = await transfer(
+                id: old.id, old.source, to: old.destination, in: old.library, mode: batch.mode)
+            {
+                done.append(
+                    Transfer(
+                        id: old.id, source: old.source, destination: old.destination, library: old.library,
+                        createdFolder: created.createdFolder))
+            }
+        }
+        batch.transfers = done
+    }
+
+    /// Shows the items in Finder, selected: a file already in the library
+    /// where it is now, anything else where it was downloaded.
+    func showInFinder(_ ids: Set<Item.ID>) {
+        let urls = items.filter { ids.contains($0.id) }.map { item in
+            guard item.status == .done, let match = item.match, let path = item.newPath,
+                let library = match.kind == .movie ? moviesFolder : showsFolder
+            else { return item.source }
+            return library.appending(path: path)
+        }
+        if !urls.isEmpty { NSWorkspace.shared.activateFileViewerSelecting(urls) }
     }
 
     // MARK: - Settings

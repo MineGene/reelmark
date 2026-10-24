@@ -172,33 +172,6 @@ struct ItemList: NSViewRepresentable {
             return true
         }
 
-        // MARK: VoiceOver
-
-        /// Each row reads as one sentence, so VoiceOver users moving down the
-        /// list hear everything about an item without visiting every column.
-        func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
-            let identifier = NSUserInterfaceItemIdentifier("SpokenRow")
-            let reused = tableView.makeView(withIdentifier: identifier, owner: nil) as? SpokenRowView
-            let rowView = reused ?? SpokenRowView()
-            rowView.identifier = identifier
-            rowView.spoken = rows.indices.contains(row) ? Self.spoken(rows[row]) : nil
-            return rowView
-        }
-
-        static func spoken(_ item: Item) -> String {
-            let match = item.match.map { "matched \($0.displayName)" }
-            let status: String? =
-                switch item.status {
-                case .pending: "waiting to search"
-                case .searching: "searching"
-                case .ready: item.newPath.map { "will be named \($0)" }
-                case .noMatch: "no match found"
-                case .failed(let message): message
-                case .done: "in your library"
-                }
-            return ([item.fileName, match, status].compactMap { $0 }).joined(separator: ", ")
-        }
-
         // MARK: Cells
 
         func numberOfRows(in tableView: NSTableView) -> Int { rows.count }
@@ -305,12 +278,19 @@ struct ItemList: NSViewRepresentable {
                 menu.addItem(withTitle: "Search Again…", action: #selector(searchAgain), keyEquivalent: "")
                     .target = self
             }
+            menu.addItem(withTitle: "Show in Finder", action: #selector(showInFinder), keyEquivalent: "")
+                .target = self
+            menu.addItem(.separator())
             menu.addItem(withTitle: "Remove from List", action: #selector(removeTargets), keyEquivalent: "")
                 .target = self
         }
 
         @objc private func searchAgain() {
             if let id = menuTargets.first { parent.onSearch(id) }
+        }
+
+        @objc private func showInFinder() {
+            parent.model.showInFinder(Set(menuTargets))
         }
 
         @objc private func removeTargets() {
@@ -332,14 +312,6 @@ final class DeletingTableView: NSTableView {
             super.keyDown(with: event)
         }
     }
-}
-
-/// A table row that VoiceOver reads as one sentence. (AppKit asks the row
-/// for its label each time, so overriding it is more reliable than setting it.)
-private final class SpokenRowView: NSTableRowView {
-    var spoken: String?
-
-    override func accessibilityLabel() -> String? { spoken }
 }
 
 /// One line of text, vertically centred, truncated to fit.
