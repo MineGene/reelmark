@@ -7,18 +7,56 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 ### Added
 
 - While copying or moving, the toolbar and the Dock icon show how many files are done, the Mac stays awake until the last one, and the Dock icon bounces once when it finishes in the background.
-- Two actions for the Shortcuts app and Spotlight: **Add Files to Reelmark**, and **Add Matched Files to Library**, which waits for the matches and then files them.
+
+## [0.1.16] - 2026-10-24
+
+### Added
+
 - **Help › Report a Bug…** and **Request a Feature…** show what would be shared, then open a pre-filled GitHub issue in your browser. Nothing is sent unless you submit it, and file names, folders and tokens are never included.
-- Videos and download folders can be dropped on Reelmark's Dock icon, opened with Finder's **Open With › Reelmark**, or added with Finder's **Services › Add to Reelmark**. Right-clicking the Dock icon offers **Add Files…**.
 
 ### Changed
 
-- The first time you copy or move files, Reelmark asks for your Jellyfin Movies or Shows folder instead of stopping with a message about Settings.
 - Matching a long list of different titles is about four times faster: up to four lookups run at once, files with the same title share one lookup, and when The Movie Database is busy Reelmark waits as long as it asks.
 
 ### Fixed
 
 - The window can be made much smaller, so macOS window tiling can fit it in half or a quarter of the screen beside other apps.
+
+## [0.1.15] - 2026-10-24
+
+### Added
+
+- Videos and download folders can be dropped on Reelmark's Dock icon, opened with Finder's **Open With › Reelmark**, or added with Finder's **Services › Add to Reelmark**. Right-clicking the Dock icon offers **Add Files…**.
+
+## [0.1.14] - 2026-10-24
+
+### Changed
+
+- The first time you copy or move files, Reelmark asks for your Jellyfin Movies or Shows folder instead of stopping with a message about Settings.
+
+## [0.1.13] - 2026-10-24
+
+### Added
+
+- Two actions for the Shortcuts app and Spotlight: **Add Files to Reelmark**, and **Add Matched Files to Library**, which waits for the matches and then files them.
+
+## [0.1.12] - 2026-10-24
+
+### Added
+
+- Apple's privacy manifest, which states that Reelmark doesn't track you and collects no data.
+
+## [0.1.11] - 2026-10-24
+
+### Added
+
+- The File menu lists the window's commands with standard shortcuts: Copy (or Move) to Library (⌘Return), Search Again… (⌘R), Show in Finder (⇧⌘R), Remove from List (⌘Delete), Clear List (⌥⌘Delete) and Stop Adding Files (⌘.).
+
+## [0.1.10] - 2026-10-24
+
+### Added
+
+- **Edit › Undo** (⌘Z) reverses the last Copy or Move to Library, as in Finder: moved files go back, and copies go to the Trash. **Edit › Redo** (⇧⌘Z) files them again.
 
 ## [0.1.9] - 2026-10-24
 
@@ -107,7 +145,14 @@ All notable changes to Reelmark are listed here, newest first. The format follow
 
 - First release: drag in downloaded movies and TV episodes, check the matches from The Movie Database, and copy or move them into a Jellyfin library with the folder and file names Jellyfin expects.
 
-[Unreleased]: https://github.com/MineGene/reelmark/compare/v0.1.9...HEAD
+[Unreleased]: https://github.com/MineGene/reelmark/compare/v0.1.16...HEAD
+[0.1.16]: https://github.com/MineGene/reelmark/compare/v0.1.15...v0.1.16
+[0.1.15]: https://github.com/MineGene/reelmark/compare/v0.1.14...v0.1.15
+[0.1.14]: https://github.com/MineGene/reelmark/compare/v0.1.13...v0.1.14
+[0.1.13]: https://github.com/MineGene/reelmark/compare/v0.1.12...v0.1.13
+[0.1.12]: https://github.com/MineGene/reelmark/compare/v0.1.11...v0.1.12
+[0.1.11]: https://github.com/MineGene/reelmark/compare/v0.1.10...v0.1.11
+[0.1.10]: https://github.com/MineGene/reelmark/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/MineGene/reelmark/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/MineGene/reelmark/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/MineGene/reelmark/compare/v0.1.6...v0.1.7
