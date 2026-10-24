@@ -120,9 +120,15 @@ struct ContentView: View {
                     .help("Remove everything from this list. Your files aren't changed.")
             }
             Button(action: fileReady) {
-                if model.isRenaming {
-                    ProgressView().controlSize(.small)
-                        .accessibilityLabel(model.mode == .copy ? "Copying" : "Moving")
+                if let filing = model.filing {
+                    // How far the batch has got, as Finder shows a copy's.
+                    HStack(spacing: 6) {
+                        ProgressView(value: Double(filing.done), total: Double(max(filing.total, 1)))
+                            .progressViewStyle(.circular)
+                            .controlSize(.small)
+                            .accessibilityLabel(model.mode == .copy ? "Copying" : "Moving")
+                        Text("\(filing.done.formatted()) of \(filing.total.formatted())")
+                    }
                 } else {
                     Text(primaryActionTitle)
                 }

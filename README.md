@@ -23,6 +23,7 @@ The TMDB id in each folder name tells Jellyfin exactly which title it is, so rem
 - **Movies and TV:** handles episodes, seasons and multi-episode files (`S01E01-E02`), including season folders like `Show/Season 2/Episode 03.mkv`.
 - **You stay in control:** check every match before anything happens, choose a different match from a list, or search again by hand.
 - **Copy or move:** Copy is the default, so your torrent client can keep seeding. On the same drive, a copy takes no extra space.
+- **Long copies:** progress shows in the toolbar and on the Dock icon, the Mac stays awake until it's done, and the Dock icon bounces when it finishes in the background.
 - **Safe:** never overwrites and never deletes anything. Edit ▸ Undo reverses the last Copy or Move, as in Finder.
 - **Nothing to set up:** no account, sign-in or API key needed.
 - **A real Mac app:** standard macOS controls, light and dark mode, VoiceOver, and a Liquid Glass icon.
@@ -123,7 +124,7 @@ No. Reelmark never checks for updates, so new versions are on the [Releases](htt
 
 ## How it's made
 
-Reelmark is written almost entirely by Claude, Anthropic's AI, through Claude Code, with the maintainer setting the direction and testing on a real Mac. Nothing is built on a personal machine: GitHub Actions builds, tests and releases every version. Every change is checked automatically for permissions, web addresses, commit privacy, reproducibility and code scanning.
+Reelmark is written almost entirely by Claude, Anthropic's AI, through Claude Code, with the maintainer setting the direction and testing on a real Mac. Claude's commits are authored by [MachineGene](https://github.com/MachineGene), so they're easy to tell apart from the maintainer's. Nothing is built on a personal machine: GitHub Actions builds, tests and releases every version. Every change is checked automatically for permissions, web addresses, commit privacy, reproducibility and code scanning.
 
 ## Contributing and security
 

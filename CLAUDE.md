@@ -4,7 +4,8 @@ Reelmark is a native macOS app (Swift, SwiftUI) that renames downloaded movies a
 
 ## Commits and pull requests
 
-- Commit as the maintainer, with the no-reply address: `git config user.name MineGene` and `git config user.email 187925417+MineGene@users.noreply.github.com`.
+- Commit as [MachineGene](https://github.com/MachineGene), the maintainer's bot account for work written by AI tools such as Claude, with its no-reply address: `git config user.name MachineGene` and `git config user.email 347314855+MachineGene@users.noreply.github.com`. Commits then show as the bot's, separate from the maintainer's own.
+- Pull requests, comments and auto-merge still appear under the maintainer's name: a cloud session reaches GitHub through the maintainer's own connection, and a token added to the environment doesn't replace it. The attribution lines below mark them as Claude's.
 - End each commit message with the standard `Co-Authored-By: Claude <noreply@anthropic.com>` attribution. Don't hide AI involvement anywhere.
 - Turn off this environment's commit signing for the repo (`git config commit.gpgsign false`): its key isn't linked to the maintainer's account, so GitHub shows "Unverified". Squash-merge commits are signed by GitHub.
 - Stage files by name (`git add path/to/file`). Never use `git add -A`, `git add .` or `git commit -a`, and switch branches only with a clean working tree (`git status --short` empty).
