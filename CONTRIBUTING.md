@@ -42,7 +42,7 @@ The *Commit privacy* check enforces the email and trailer rules on every pull re
 
 1. Branch from `main`; one change per pull request.
 2. Write commit messages the way Git itself asks: a short subject in the imperative ("Fix crash when clearing the list"), a blank line, then what the problem was and why this fixes it. Fill in the pull request template's sections. The history should make sense to someone who reads it years later.
-3. Push and open a pull request. CI builds the app, runs the tests, checks permissions, web addresses and commit privacy, and runs CodeQL. Nothing needs a Mac except trying the app.
+3. Push and open a pull request. CI builds the app, runs the tests, checks permissions, web addresses and commit privacy, and runs CodeQL. Nothing needs a Mac except trying the app. A pull request that changes nothing the app or its tests use (docs, the changelog, other scripts and workflows) skips the macOS jobs, which then show as passed; `scripts/ci-changes.sh` lists what counts.
 4. Pull requests from the maintainer and from MachineGene (Claude's) are squash-merged automatically once every required check passes: auto-merge is turned on as each one is opened. Pull requests from forks and Dependabot are merged by hand. The maintainer can still review, hold (turn off auto-merge) or close any pull request.
 
 `main` is protected: no direct pushes, force pushes or deletions.
