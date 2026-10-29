@@ -78,6 +78,8 @@ jobs:
         run: scripts/changelog.sh check
       - name: Test the changelog script
         run: scripts/test-changelog.sh
+      - name: Test the version choice
+        run: scripts/test-next-version.sh
 
   core-tests:
     # Named in full, not from a matrix: a matrix job skipped by its `if:`
