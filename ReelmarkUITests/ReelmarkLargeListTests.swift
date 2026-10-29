@@ -1,10 +1,14 @@
 import AppKit
 import XCTest
 
-/// Checks that a very long list stays usable: 10,000 made-up episodes load,
+/// Checks that a very long list stays usable: 3,000 made-up episodes load,
 /// sort, and can all be selected and deleted without the window freezing or
 /// the app quitting. The items come from REELMARK_UI_TEST_ITEMS (see
 /// LibraryModel.forLaunch, Debug only).
+///
+/// 3,000 rows are dozens of screens, so work that grows with the square of
+/// the list (what this guards against) still takes millions of steps. With
+/// 10,000 rows these tests took about two minutes of scarce Mac runner time.
 final class ReelmarkLargeListTests: XCTestCase {
 
     /// Launches with `count` made-up items and waits for the window,
@@ -32,25 +36,25 @@ final class ReelmarkLargeListTests: XCTestCase {
     }
 
     @MainActor
-    func testTenThousandItemsStayResponsive() throws {
-        let app = try launch(withItems: 10000)
+    func testThreeThousandItemsStayResponsive() throws {
+        let app = try launch(withItems: 3000)
         guard app.staticTexts["Made.Up.Show.S01E01.mkv"].waitForExistence(timeout: 30) else {
             print(app.debugDescription)
             return XCTFail("The made-up list didn't appear")
         }
-        XCTAssertTrue(app.staticTexts["10,000 items"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["3,000 items"].waitForExistence(timeout: 10))
 
-        // Searching all 10,000 as you type: one episode is left, and
+        // Searching all 3,000 as you type: one episode is left, and
         // clearing the field brings back the whole list.
         app.typeKey("f", modifierFlags: .command)
         app.typeText("S01E01")
         XCTAssertTrue(
-            app.staticTexts["1 of 10,000 items"].waitForExistence(timeout: 10), "Search was slow or wrong")
+            app.staticTexts["1 of 3,000 items"].waitForExistence(timeout: 10), "Search was slow or wrong")
         app.typeKey(.escape, modifierFlags: [])
         XCTAssertTrue(
-            app.staticTexts["10,000 items"].waitForExistence(timeout: 10), "Clearing the search was slow")
+            app.staticTexts["3,000 items"].waitForExistence(timeout: 10), "Clearing the search was slow")
 
-        // Sort all 10,000 one way and then the other.
+        // Sort all 3,000 one way and then the other.
         let header = app.buttons["Downloaded File"].firstMatch
         XCTAssertTrue(header.waitForExistence(timeout: 10))
         let headerCentre = header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))

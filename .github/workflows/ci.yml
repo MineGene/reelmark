@@ -18,6 +18,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Decides whether the macOS jobs below need to run (scripts/ci-changes.sh).
+  # A pull request that changes only docs, the changelog or unrelated
+  # scripts skips them; GitHub counts a job skipped by its `if:` as passing,
+  # so required checks don't block the merge, and no Mac runner is used.
+  # Workflow-level `paths:` filters aren't used: a required check filtered
+  # out that way never reports, and the pull request waits forever.
+  changes:
+    name: Detect app changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      app: ${{ steps.detect.outputs.app }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # First, so a broken detector leaves no output and everything runs.
+      - name: Test the detection script
+        run: scripts/test-ci-changes.sh
+      - name: Detect
+        id: detect
+        env:
+          # Empty outside pull requests, so pushes to main, the weekly run
+          # and manual runs always run everything.
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          app=$(scripts/ci-changes.sh "$BASE" "$HEAD")
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+          [ "$app" = true ] || echo "Nothing the app or its tests use changed; macOS jobs skipped."
+
   commit-privacy:
     name: Commit privacy
     if: github.event_name == 'pull_request' || github.event_name == 'push'
@@ -48,12 +80,14 @@ jobs:
         run: scripts/test-changelog.sh
 
   core-tests:
-    name: Core tests (${{ matrix.runner }})
-    strategy:
-      fail-fast: false
-      matrix:
-        runner: [xcode-27]
-    runs-on: ${{ matrix.runner }}
+    # Named in full, not from a matrix: a matrix job skipped by its `if:`
+    # reports under its unexpanded name, and the required check
+    # "Core tests (xcode-27)" would never arrive.
+    name: Core tests (xcode-27)
+    needs: changes
+    # Runs unless the detector said "false": a failed detection still runs.
+    if: ${{ !cancelled() && needs.changes.outputs.app != 'false' }}
+    runs-on: xcode-27
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -71,6 +105,9 @@ jobs:
 
   build-app:
     name: Build and check app
+    needs: changes
+    # Runs unless the detector said "false": a failed detection still runs.
+    if: ${{ !cancelled() && needs.changes.outputs.app != 'false' }}
     runs-on: xcode-27
     timeout-minutes: 30
     steps:
@@ -89,6 +126,9 @@ jobs:
 
   ui-tests:
     name: UI tests
+    needs: changes
+    # Runs unless the detector said "false": a failed detection still runs.
+    if: ${{ !cancelled() && needs.changes.outputs.app != 'false' }}
     # Launches a Debug build of the app and uses its window like a person
     # would (see ReelmarkUITests), so a crash fails here, not on a Mac.
     runs-on: xcode-27
@@ -113,6 +153,9 @@ jobs:
 
   reproducible:
     name: Reproducible build
+    needs: changes
+    # Runs unless the detector said "false": a failed detection still runs.
+    if: ${{ !cancelled() && needs.changes.outputs.app != 'false' }}
     runs-on: xcode-27
     timeout-minutes: 40
     steps:

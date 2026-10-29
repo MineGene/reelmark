@@ -18,8 +18,35 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # Pull requests that change nothing the app or its tests use (see
+  # scripts/ci-changes.sh) skip the scan without taking a Mac runner; the
+  # check still reports success. Main and the weekly run always scan.
+  changes:
+    name: Detect app changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      app: ${{ steps.detect.outputs.app }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Detect
+        id: detect
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          app=$(scripts/ci-changes.sh "$BASE" "$HEAD")
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+          [ "$app" = true ] || echo "No code changes in this pull request; CodeQL scan skipped."
+
   analyze:
     name: Analyze Swift
+    needs: changes
+    # Runs unless the detector said "false": a failed detection still scans.
+    if: ${{ !cancelled() && needs.changes.outputs.app != 'false' }}
     # CodeQL can't analyse Swift built with Xcode 27 / Swift 6.4 (GitHub
     # changelog, 2026-10-19), so the scan uses the last supported Xcode on a
     # macOS 26 runner. It reads the same source; releases still use Xcode 27.
@@ -37,28 +64,7 @@ jobs:
       - name: Select Xcode supported by CodeQL
         run: scripts/select-xcode.sh 26.6
 
-      # Pull requests that don't touch anything CodeQL analyses skip the scan
-      # (the check still reports success). Main and the weekly run always scan.
-      - name: Check for code changes
-        id: changes
-        if: github.event_name == 'pull_request'
-        env:
-          BASE: ${{ github.event.pull_request.base.sha }}
-          HEAD: ${{ github.event.pull_request.head.sha }}
-        run: |
-          pattern='\.swift$|^Packages/|^Reelmark\.xcodeproj/|^Config/|^\.github/workflows/codeql\.yml$'
-          # Capture first: with pipefail, grep -q stopping early could fail
-          # the pipe and wrongly skip the scan.
-          changed=$(git diff --name-only "$BASE...$HEAD")
-          if grep -qE "$pattern" <<<"$changed"; then
-            echo "scan=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "scan=false" >> "$GITHUB_OUTPUT"
-            echo "No code changes in this pull request; CodeQL scan skipped."
-          fi
-
       - uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
-        if: steps.changes.outputs.scan != 'false'
         with:
           languages: swift
           build-mode: manual
@@ -66,7 +72,6 @@ jobs:
       # CodeQL reads the source, so an unoptimised, unsigned debug build gives
       # the same results as a release build and compiles far faster.
       - name: Build (debug, for analysis)
-        if: steps.changes.outputs.scan != 'false'
         run: |
           xcodebuild build \
             -project Reelmark.xcodeproj \
@@ -79,6 +84,5 @@ jobs:
             -quiet
 
       - uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
-        if: steps.changes.outputs.scan != 'false'
         with:
           category: "/language:swift"
