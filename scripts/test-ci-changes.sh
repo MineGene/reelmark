@@ -16,6 +16,7 @@ git config commit.gpgsign false
 mkdir scripts
 cp "$script" scripts/ci-changes.sh
 echo "Read me." >README.md
+mkdir Reelmark && echo "<plist/>" >Reelmark/PrivacyInfo.xcprivacy
 git add . && git commit -qm "Start"
 base=$(git rev-parse HEAD)
 
@@ -65,6 +66,15 @@ expect true scripts/ci-changes.sh
 expect true .github/workflows/ci.yml
 expect true .github/workflows/codeql.yml
 expect true Somewhere/Else.swift
+# Git quotes non-ASCII paths unless asked not to.
+expect true "Reelmark/Épisode.txt"
+
+# Moving a file out of the app changes the app.
+git checkout -q -b renamed "$base"
+mkdir -p docs && git mv Reelmark/PrivacyInfo.xcprivacy docs/PrivacyInfo.xcprivacy
+git commit -qm "Move"
+[ "$(scripts/ci-changes.sh "$base" HEAD)" = true ] || fail "moving a file out of the app should run"
+git checkout -q main
 
 # A docs change plus an app change still runs.
 git checkout -q -b mixed "$base"

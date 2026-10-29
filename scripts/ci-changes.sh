@@ -25,8 +25,12 @@ fi
 needs='^(Reelmark/|Packages/|ReelmarkUITests/|Config/|Reelmark\.xcodeproj/|\.xcode-version$|\.swift-format$|scripts/(annotate-errors|app-digest|build-app|check-app|check-reproducible|select-xcode|ci-changes)\.sh$|\.github/workflows/(ci|codeql)\.yml$)|\.swift$'
 
 # Capture first, so a failed diff falls back to running, and grep stopping
-# early can't fail the pipe (see check-app.sh).
-changed=$(git diff --name-only "$base...$head" 2>/dev/null) || { echo true; exit 0; }
+# early can't fail the pipe (see check-app.sh). -z gives paths unquoted
+# (git otherwise quotes non-ASCII names, which then match nothing), and
+# --no-renames lists a renamed file's old path too, so moving a file out
+# of the app still counts.
+changed=$(git diff --no-renames -z --name-only "$base...$head" 2>/dev/null | tr '\0' '\n') \
+  || { echo true; exit 0; }
 if grep -qE "$needs" <<<"$changed"; then
   echo true
 else
